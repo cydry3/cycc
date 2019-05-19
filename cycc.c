@@ -106,6 +106,14 @@ Node *new_node_num(int val) {
   return node;
 }
 
+// トークンを消費するとともに、その型が期待したものかを確認する
+int consume(int ty) {
+  if (tokens[pos].ty != ty)
+    return 0;
+  pos++;
+  return 1;
+}
+
 int main(int argc, char **argv) {
   if (argc != 2) {
     fprintf(stderr, "引数の個数が正しくありません\n");
