@@ -47,7 +47,7 @@ void error_at(char *loc, char *msg) {
 
 // user_input が指している文字列を
 // トークンに分割してtokensに保存
-void tokenize() {
+void tokenize(char *user_input) {
   char *p = user_input;
 
   int i = 0;
@@ -188,7 +188,7 @@ void gen(Node *node) {
     printf("  add rax, rdi\n");
     break;
   case '-':
-    printf("  sub rax, radi\n");
+    printf("  sub rax, rdi\n");
     break;
   case '*':
     // imulはrax*引数レジスタし、結果の上位64bitはRDXに、下位64bitはRAXにセットする（仕様
@@ -212,45 +212,19 @@ int main(int argc, char **argv) {
   }
 
   // トークナイズする
-  user_input = argv[1];
-  tokenize();
+  tokenize(argv[1]);
+  // パースする
+  Node *node = expr();
 
   // アセンブリの前半分
   printf(".intel_syntax noprefix\n");
   printf(".global main\n");
   printf("main:\n");
 
-  // 最初の文字列が数であるので、これをチェックして
-  // 最初のmov命令を出力
-  if (tokens[0].ty != TK_NUM)
-    error_at(tokens[0].input, "数ではありません");
-  printf("  mov rax, %d\n", tokens[0].val);
+  // 加減算のコードを生成
+  gen(node);
 
-  // +数、または-数というトークン列を消費しながら、
-  // アセンブリを出力する
-  int i = 1;
-  while (tokens[i].ty != TK_EOF) {
-    if (tokens[i].ty == '+') {
-      i++;
-      if (tokens[i].ty != TK_NUM)
-        error_at(tokens[i].input, "数ではありません");
-      printf("  add rax, %ld\n", tokens[i].val);
-      i++;
-      continue;
-    }
-
-    if (tokens[i].ty == '-') {
-      i++;
-      if (tokens[i].ty != TK_NUM)
-        error_at(tokens[i].input, "数ではありません");
-      printf("  sub rax, %ld\n", tokens[i].val);
-      i++;
-      continue;
-    }
-
-    error_at(tokens[i].input, "予期しないトークンです");
-  }
-
+  printf("  pop rax\n");
   printf("  ret\n");
   return 0;
 }
