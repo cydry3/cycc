@@ -23,6 +23,8 @@ char *user_input;
 // トークナイズした結果のトークン列をこの配列に保存
 // 100個以上のトークンは来ないものとする　
 Token tokens[100];
+// 現在着目しているtokenのインデックス
+int pos;
 
 // エラーを報告する関数
 // printfと同じ引数を受け取る
@@ -91,6 +93,11 @@ typedef struct Node {
   int val;          // tyがND_NUMの場合のみ使う
 } Node;
 
+// パーサの関数宣言
+Node *expr();
+Node *mul();
+Node *term();
+
 Node *new_node(int ty, Node *lhs, Node *rhs) {
   Node *node = malloc(sizeof(Node));
   node->ty = ty;
@@ -112,6 +119,90 @@ int consume(int ty) {
     return 0;
   pos++;
   return 1;
+}
+
+// パーサ
+//
+// 生成規則:
+// expr = mul ("+" mul | "-" mul)*
+// mul  = term ("*" term | "/" term)*
+// term = num | "(" expr ")"
+//
+Node *expr() {
+  Node *node = mul();
+
+  for (;;) {
+    if (consume('+'))
+      node = new_node('+', node, mul());
+    else if (consume('-'))
+      node = new_node('-', node, mul());
+    else
+      return node;
+  }
+}
+
+Node *mul() {
+  Node *node = term();
+
+  for (;;) {
+    if (consume('*'))
+      node = new_node('*', node, term());
+    else if (consume('/'))
+      node = new_node('/', node, term());
+    else
+      return node;
+  }
+}
+
+// termはexprやmulのように左結合でない
+Node *term() {
+  // 開きカッコからはじまるなら、"(" expr ")"
+  if (consume('(')) {
+    Node *node = expr();
+    if (consume(')'))
+      error_at(tokens[pos].input, "開きカッコに対する閉じカッコがありません");
+    return node;
+  }
+  // 上記でない場合は、numが来るハズ
+  if (tokens[pos].ty == TK_NUM)
+    return new_node_num(tokens[pos++].val);
+
+  error_at(tokens[pos].input, "数値でも開きカッコでもないトークンです");
+}
+
+//　レジスタマシンでスタックマシンをエミュレートし、コンパイルする
+void gen(Node *node) {
+  if (node->ty == ND_NUM) {
+    printf("  push %d\n", node->val);
+    return;
+  }
+
+  gen(node->lhs);
+  gen(node->rhs);
+
+  printf("  pop rdi\n");
+  printf("  pop rax\n");
+
+  switch (node->ty) {
+  case '+':
+    printf("  add rax, rdi\n");
+    break;
+  case '-':
+    printf("  sub rax, radi\n");
+    break;
+  case '*':
+    // imulはrax*引数レジスタし、結果の上位64bitはRDXに、下位64bitはRAXにセットする（仕様
+    printf("  imul rdi\n");
+    break;
+  case '/':
+    // RAXの64bitを128bitに伸長し、RDXとRAXに。
+    printf("  cqo\n");
+    // idivはRDXとRAXをとって128bitと見なして、それを引数レジスタで除算
+    printf("  idiv rdi\n");
+    break;
+  }
+
+  printf("  push rax\n");
 }
 
 int main(int argc, char **argv) {
