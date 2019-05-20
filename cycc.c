@@ -89,6 +89,14 @@ void tokenize(char *user_input) {
       continue;
     }
 
+    if (*p == '<') {
+      tokens[i].ty = *p;
+      tokens[i].input = p;
+      i++;
+      p++;
+      continue;
+    }
+
     if (*p == '+' || *p == '-' || *p == '*' || *p == '(' || *p == ')' ||
         *p == '/') {
       tokens[i].ty = *p;
@@ -165,7 +173,7 @@ int consume(int ty) {
 // 生成規則:
 // expr = equiality
 // equiality = relational ("==" relational | "!=" relational)*
-// relational = add ("<=" add | ">=" add)*
+// relational = add ("<" add | "<=" add | ">=" add)*
 // add = mul ("+" mul | "-" mul)*
 // mul  = unary ("*" unary | "/" unary)*
 // unary = ("+" | "-")? term
@@ -193,7 +201,9 @@ Node *relational() {
   Node *node = add();
 
   for (;;) {
-    if (consume(TK_LE))
+    if (consume('<'))
+      node = new_node('<', node, add());
+    else if (consume(TK_LE))
       node = new_node(ND_LE, node, add());
     else if (consume(TK_GE))
       node = new_node(ND_LE, add(), node);
@@ -301,6 +311,13 @@ void gen(Node *node) {
     // フラグレジスタの値を、al(RAX下位8bitの別名)へ
     // LESS THAN OR EQUALであるかをセット
     printf("  setle al\n");
+    printf("  movzb rax, al\n");
+    break;
+  case '<':
+    printf("  cmp rax, rdi\n");
+    // フラグレジスタの値を、al(RAX下位8bitの別名)へ
+    // LESS THANであるかをセット
+    printf("  setl al\n");
     printf("  movzb rax, al\n");
     break;
   }
