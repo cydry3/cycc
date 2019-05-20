@@ -30,6 +30,12 @@ typedef struct {
   int len;
 } Vector;
 
+// 変数管理のためのマップ
+typedef struct {
+  Vector *keys;
+  Vector *vals;
+} Map;
+
 // 抽象構文木のノードの型を定義
 enum {
   ND_NUM = 256, // 整数のノードの型
@@ -52,6 +58,11 @@ typedef struct Node {
 Vector *new_vector();
 void vec_push(Vector *vec, void *elem);
 void runtest();
+
+// 変数管理のマップの為の関数
+Map *new_map();
+void map_put(Map *map, char *key, void *val);
+void *map_get(Map *map, char *key);
 
 //　レジスタマシンでスタックマシンをエミュレートし、コンパイルする
 void gen(Node *node);
