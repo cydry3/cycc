@@ -58,7 +58,8 @@ void tokenize(char *user_input) {
       continue;
     }
 
-    if (*p == '+' || *p == '-' || *p == '*' || *p == '(' || *p == ')') {
+    if (*p == '+' || *p == '-' || *p == '*' || *p == '(' || *p == ')' ||
+        *p == '/') {
       tokens[i].ty = *p;
       tokens[i].input = p;
       i++;
@@ -222,7 +223,7 @@ int main(int argc, char **argv) {
   printf(".global main\n");
   printf("main:\n");
 
-  // 加減算のコードを生成
+  // コードを生成
   gen(node);
 
   printf("  pop rax\n");
