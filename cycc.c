@@ -9,6 +9,7 @@ enum {
   TK_NUM = 256, // 整数トークン
   TK_EOF,       // 入力の終わりを表すトークン
   TK_EQ,        // 比較演算子'=='を表すトークン
+  TK_NE,        // 比較演算子'!='を表すトークン
 };
 
 // トークンの型
@@ -66,6 +67,12 @@ void tokenize(char *user_input) {
       i++;
       p += 2;
       continue;
+    } else if (strncmp(p, "!=", 2) == 0) {
+      tokens[i].ty = TK_NE;
+      tokens[i].input = p;
+      i++;
+      p += 2;
+      continue;
     }
 
     if (*p == '+' || *p == '-' || *p == '*' || *p == '(' || *p == ')' ||
@@ -96,6 +103,7 @@ void tokenize(char *user_input) {
 enum {
   ND_NUM = 256, // 整数のノードの型
   ND_EQ,        // 比較演算子'=='のノードの型
+  ND_NE,        // 比較演算子'!='のノードの型
 };
 
 typedef struct Node {
@@ -140,7 +148,7 @@ int consume(int ty) {
 //
 // 生成規則:
 // expr = equiality
-// equiality = add ("==" add)*
+// equiality = add ("==" add | "!=" add)*
 // add = mul ("+" mul | "-" mul)*
 // mul  = unary ("*" unary | "/" unary)*
 // unary = ("+" | "-")? term
@@ -153,10 +161,15 @@ Node *expr() {
 
 Node *equiality() {
   Node *node = add();
-  if (consume(TK_EQ))
-    node = new_node(ND_EQ, node, add());
-  else
-    return node;
+
+  for (;;) {
+    if (consume(TK_EQ))
+      node = new_node(ND_EQ, node, add());
+    else if (consume(TK_NE))
+      node = new_node(ND_NE, node, add());
+    else
+      return node;
+  }
 }
 
 Node *add() {
@@ -245,8 +258,13 @@ void gen(Node *node) {
     // フラグレジスタの値を、al(RAX下位8bitの別名)へセット
     printf("  sete al\n");
     // 上位56bitをゼロで埋めてセットする
-    printf(" movzb rax, al\n");
+    printf("  movzb rax, al\n");
     break;
+  case ND_NE:
+    printf("  cmp rax, rdi\n");
+    // フラグレジスタの値を、al(RAX下位8bitの別名)へNOT EQUALであるかをセット
+    printf("  setne al\n");
+    printf("  movzb rax, al\n");
   }
 
   printf("  push rax\n");
