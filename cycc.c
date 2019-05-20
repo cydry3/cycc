@@ -97,6 +97,7 @@ typedef struct Node {
 // パーサの関数宣言
 Node *expr();
 Node *mul();
+Node *unary();
 Node *term();
 
 Node *new_node(int ty, Node *lhs, Node *rhs) {
@@ -126,7 +127,8 @@ int consume(int ty) {
 //
 // 生成規則:
 // expr = mul ("+" mul | "-" mul)*
-// mul  = term ("*" term | "/" term)*
+// mul  = unary ("*" unary | "/" unary)*
+// unary = ("+" | "-")? term
 // term = num | "(" expr ")"
 //
 Node *expr() {
@@ -143,16 +145,24 @@ Node *expr() {
 }
 
 Node *mul() {
-  Node *node = term();
+  Node *node = unary();
 
   for (;;) {
     if (consume('*'))
-      node = new_node('*', node, term());
+      node = new_node('*', node, unary());
     else if (consume('/'))
-      node = new_node('/', node, term());
+      node = new_node('/', node, unary());
     else
       return node;
   }
+}
+
+Node *unary() {
+  if (consume('+'))
+    return term();
+  if (consume('-'))
+    return new_node('-', new_node_num(0), term());
+  return term();
 }
 
 // termはexprやmulのように左結合でない
