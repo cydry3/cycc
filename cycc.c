@@ -10,6 +10,7 @@ enum {
   TK_EOF,       // 入力の終わりを表すトークン
   TK_EQ,        // 比較演算子'=='を表すトークン
   TK_NE,        // 比較演算子'!='を表すトークン
+  TK_LE,        // 比較演算子'<='を表すトークン
 };
 
 // トークンの型
@@ -73,6 +74,12 @@ void tokenize(char *user_input) {
       i++;
       p += 2;
       continue;
+    } else if (strncmp(p, "<=", 2) == 0) {
+      tokens[i].ty = TK_LE;
+      tokens[i].input = p;
+      i++;
+      p += 2;
+      continue;
     }
 
     if (*p == '+' || *p == '-' || *p == '*' || *p == '(' || *p == ')' ||
@@ -104,6 +111,7 @@ enum {
   ND_NUM = 256, // 整数のノードの型
   ND_EQ,        // 比較演算子'=='のノードの型
   ND_NE,        // 比較演算子'!='のノードの型
+  ND_LE,        // 比較演算子'<='のノードの型
 };
 
 typedef struct Node {
@@ -116,6 +124,7 @@ typedef struct Node {
 // パーサの関数宣言
 Node *expr();
 Node *equiality();
+Node *relational();
 Node *add();
 Node *mul();
 Node *unary();
@@ -148,7 +157,8 @@ int consume(int ty) {
 //
 // 生成規則:
 // expr = equiality
-// equiality = add ("==" add | "!=" add)*
+// equiality = relational ("==" relational | "!=" relational)*
+// relational = add ("<=" add)*
 // add = mul ("+" mul | "-" mul)*
 // mul  = unary ("*" unary | "/" unary)*
 // unary = ("+" | "-")? term
@@ -160,13 +170,24 @@ Node *expr() {
 }
 
 Node *equiality() {
-  Node *node = add();
+  Node *node = relational();
 
   for (;;) {
     if (consume(TK_EQ))
-      node = new_node(ND_EQ, node, add());
+      node = new_node(ND_EQ, node, relational());
     else if (consume(TK_NE))
-      node = new_node(ND_NE, node, add());
+      node = new_node(ND_NE, node, relational());
+    else
+      return node;
+  }
+}
+
+Node *relational() {
+  Node *node = add();
+
+  for (;;) {
+    if (consume(TK_LE))
+      node = new_node(ND_LE, node, add());
     else
       return node;
   }
@@ -265,6 +286,14 @@ void gen(Node *node) {
     // フラグレジスタの値を、al(RAX下位8bitの別名)へNOT EQUALであるかをセット
     printf("  setne al\n");
     printf("  movzb rax, al\n");
+    break;
+  case ND_LE:
+    printf("  cmp rax, rdi\n");
+    // フラグレジスタの値を、al(RAX下位8bitの別名)へ
+    // LESS THAN OR EQUALであるかをセット
+    printf("  setle al\n");
+    printf("  movzb rax, al\n");
+    break;
   }
 
   printf("  push rax\n");
