@@ -50,3 +50,19 @@ void runtest();
 
 //　レジスタマシンでスタックマシンをエミュレートし、コンパイルする
 void gen(Node *node);
+
+// 入力プログラム
+extern char *user_input;
+
+// トークナイズした結果のトークン列をこの可変長ベクタに保存
+extern Vector *tokens;
+
+// 現在着目しているtoken->dataのインデックス
+extern int pos;
+
+// user_input が指している文字列を
+// トークンに分割してtokensに保存
+void tokenize(char *user_input);
+
+// パーサの関数宣言
+Node *expr();
