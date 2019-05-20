@@ -1,9 +1,30 @@
 #include "cycc.h"
 
+// １文字変数'a'~'z'を左辺値として評価する
+void gen_lval(Node *node) {
+  if (node->ty != ND_IDENT)
+    error("代入の左辺値が変数ではありません");
+
+  int offset = ('z' - node->name + 1) * 8;
+  printf("  mov rax, rbp\n");
+  printf("  sub rax, %d\n", offset);
+  printf("  push rax\n");
+  // 即値を使ってテスト
+  printf("  mov [rax], byte ptr '%c'\n", node->name);
+}
+
 //　レジスタマシンでスタックマシンをエミュレートし、コンパイルする
 void gen(Node *node) {
   if (node->ty == ND_NUM) {
     printf("  push %d\n", node->val);
+    return;
+  }
+
+  if (node->ty == ND_IDENT) {
+    gen_lval(node);
+    printf("  pop rax\n");
+    printf("  mov rax, [rax]\n");
+    printf("  push rax\n");
     return;
   }
 

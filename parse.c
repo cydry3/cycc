@@ -112,6 +112,16 @@ void tokenize(char *user_input) {
       continue;
     }
 
+    if ('a' <= *p && *p <= 'z') {
+      Token *token = new_token();
+      token->ty = TK_IDENT;
+      token->input = p;
+      vec_push(tokens, token);
+      i++;
+      p++;
+      continue;
+    }
+
     error_at(p, "トークナイズできません");
   }
 
@@ -145,6 +155,13 @@ Node *new_node_num(int val) {
   return node;
 }
 
+Node *new_node_ident(char name) {
+  Node *node = malloc(sizeof(Node));
+  node->ty = ND_IDENT;
+  node->name = name;
+  return node;
+}
+
 // トークンを消費するとともに、その型が期待したものかを確認する
 int consume(int ty) {
   if (((Token *)(tokens->data[pos]))->ty != ty)
@@ -162,7 +179,7 @@ int consume(int ty) {
 // add = mul ("+" mul | "-" mul)*
 // mul  = unary ("*" unary | "/" unary)*
 // unary = ("+" | "-")? term
-// term = num | "(" expr ")"
+// term = num | ident | "(" expr ")"
 //
 Node *expr() {
   Node *node = equiality();
@@ -240,13 +257,16 @@ Node *term() {
   if (consume('(')) {
     Node *node = expr();
     if (!consume(')'))
-      error_at(((Token *)(tokens->data[pos]))->input,
+      error_at(*(((Token *)(tokens->data[pos]))->input),
                "開きカッコに対する閉じカッコがありません");
     return node;
   }
-  // 上記でない場合は、numが来るハズ
+  // 上記でない場合は、numかidentが来るハズ
   if (((Token *)(tokens->data[pos]))->ty == TK_NUM)
     return new_node_num(((Token *)tokens->data[pos++])->val);
+  else if (((Token *)(tokens->data[pos]))->ty == TK_IDENT) {
+    return new_node_ident(*((Token *)tokens->data[pos++])->input);
+  }
 
   error_at(((Token *)(tokens->data[pos]))->input,
            "数値でも開きカッコでもないトークンです");

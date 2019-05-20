@@ -7,6 +7,7 @@
 // トークンの型を表す値
 enum {
   TK_NUM = 256, // 整数トークン
+  TK_IDENT,     // 識別子　
   TK_EOF,       // 入力の終わりを表すトークン
   TK_EQ,        // 比較演算子'=='を表すトークン
   TK_NE,        // 比較演算子'!='を表すトークン
@@ -31,6 +32,7 @@ typedef struct {
 // 抽象構文木のノードの型を定義
 enum {
   ND_NUM = 256, // 整数のノードの型
+  ND_IDENT,     // 識別子のノードの型
   ND_EQ,        // 比較演算子'=='のノードの型
   ND_NE,        // 比較演算子'!='のノードの型
   ND_LE,        // 比較演算子'<='のノードの型('>='の場合は両辺を入れ替えて使用)
@@ -41,6 +43,7 @@ typedef struct Node {
   struct Node *lhs; // 左辺
   struct Node *rhs; // 右辺
   int val;          // tyがND_NUMの場合のみ使う
+  char name;        // tyがND_IDENTの場合のみ使う
 } Node;
 
 // 可変長ベクタの為の関数
@@ -66,3 +69,7 @@ void tokenize(char *user_input);
 
 // パーサの関数宣言
 Node *expr();
+
+// エラーを報告する関数
+// printfと同じ引数を受け取る
+void error(char *fmt, ...);
