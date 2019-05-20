@@ -46,6 +46,17 @@ void tokenize(char *user_input) {
       continue;
     }
 
+    // ステートメント
+    if (*p == ';') {
+      Token *token = new_token();
+      token->ty = *p;
+      token->input = p;
+      vec_push(tokens, token);
+      i++;
+      p++;
+      continue;
+    }
+
     // 比較演算子
     if (strncmp(p, "==", 2) == 0) {
       Token *token = new_token();
@@ -132,6 +143,7 @@ void tokenize(char *user_input) {
 }
 
 // パーサの関数宣言
+Node *stmt();
 Node *expr();
 Node *assign();
 Node *equiality();
@@ -174,6 +186,7 @@ int consume(int ty) {
 // パーサ
 //
 // 生成規則:
+// stmt = expr ";"
 // expr = assign
 // assign = equiality ("=" assign)?
 // equiality = relational ("==" relational | "!=" relational)*
@@ -183,6 +196,14 @@ int consume(int ty) {
 // unary = ("+" | "-")? term
 // term = num | ident | "(" expr ")"
 //
+Node *stmt() {
+  Node *node = expr();
+  if (!consume(';'))
+    error_at((((Token *)(tokens->data[pos]))->input),
+             "';'ではないトークンです");
+  return node;
+}
+
 Node *expr() {
   Node *node = assign();
   return node;
