@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
   // トークナイズする
   tokenize(user_input);
   // パースする
-  Node *node = stmt();
+  Node *node = program();
 
   // アセンブリの前半分
   printf(".intel_syntax noprefix\n");
@@ -31,9 +31,11 @@ int main(int argc, char **argv) {
   printf("  sub rsp, 208\n");
 
   // コードを生成
-  gen(node);
+  for (int i = 0; code[i]; i++) {
+    gen(code[i]);
 
-  printf("  pop rax\n");
+    printf("  pop rax\n");
+  }
 
   // エピローグ
   printf("  mov rsp, rbp\n");

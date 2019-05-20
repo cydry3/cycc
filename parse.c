@@ -183,9 +183,13 @@ int consume(int ty) {
   return 1;
 }
 
+// パースされた複数のステートメントを100個まで格納
+Node *code[100];
+
 // パーサ
 //
 // 生成規則:
+// program = stmt*
 // stmt = expr ";"
 // expr = assign
 // assign = equiality ("=" assign)?
@@ -196,6 +200,13 @@ int consume(int ty) {
 // unary = ("+" | "-")? term
 // term = num | ident | "(" expr ")"
 //
+Node *program() {
+  int i = 0;
+  while (((Token *)tokens->data[pos])->ty != TK_EOF)
+    code[i++] = stmt();
+  code[i] = NULL;
+}
+
 Node *stmt() {
   Node *node = expr();
   if (!consume(';'))

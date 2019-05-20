@@ -68,8 +68,11 @@ extern int pos;
 void tokenize(char *user_input);
 
 // パーサの関数宣言
-Node *stmt();
+Node *program();
 
 // エラーを報告する関数
 // printfと同じ引数を受け取る
 void error(char *fmt, ...);
+
+// パースされた複数のステートメントを100個まで格納
+extern Node *code[100];
