@@ -143,6 +143,7 @@ void tokenize(char *user_input) {
 }
 
 // パーサの関数宣言
+Node *program();
 Node *stmt();
 Node *expr();
 Node *assign();
