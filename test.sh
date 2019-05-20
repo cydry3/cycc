@@ -51,5 +51,8 @@ try 2 "a = b = 2;"
 try 2 "a = b = 3; c = 2;"
 try 5 "a = 5; b = 3; a;"
 try 5 "a = b = 3; a = 5; c = 2; a;"
+try 11 "return 11;"
+try 14 "a = 3; b = 5 * 6 - 8; return a + b / 2;"
+try 5 "return 5; return 8;"
 
 echo OK
