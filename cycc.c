@@ -58,7 +58,7 @@ void tokenize(char *user_input) {
       continue;
     }
 
-    if (*p == '+' || *p == '-') {
+    if (*p == '+' || *p == '-' || *p == '*') {
       tokens[i].ty = *p;
       tokens[i].input = p;
       i++;
@@ -159,7 +159,7 @@ Node *term() {
   // 開きカッコからはじまるなら、"(" expr ")"
   if (consume('(')) {
     Node *node = expr();
-    if (consume(')'))
+    if (!consume(')'))
       error_at(tokens[pos].input, "開きカッコに対する閉じカッコがありません");
     return node;
   }
@@ -211,8 +211,9 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  user_input = argv[1];
   // トークナイズする
-  tokenize(argv[1]);
+  tokenize(user_input);
   // パースする
   Node *node = expr();
 
