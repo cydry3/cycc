@@ -42,3 +42,8 @@ typedef struct Node {
   struct Node *rhs; // 右辺
   int val;          // tyがND_NUMの場合のみ使う
 } Node;
+
+// 可変長ベクタの為の関数
+Vector *new_vector();
+void vec_push(Vector *vec, void *elem);
+void runtest();
