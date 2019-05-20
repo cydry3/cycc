@@ -8,6 +8,7 @@
 enum {
   TK_NUM = 256, // 整数トークン
   TK_EOF,       // 入力の終わりを表すトークン
+  TK_EQ,        // 比較演算子'=='を表すトークン
 };
 
 // トークンの型
@@ -58,6 +59,15 @@ void tokenize(char *user_input) {
       continue;
     }
 
+    // 比較演算子
+    if (strncmp(p, "==", 2) == 0) {
+      tokens[i].ty = TK_EQ;
+      tokens[i].input = p;
+      i++;
+      p += 2;
+      continue;
+    }
+
     if (*p == '+' || *p == '-' || *p == '*' || *p == '(' || *p == ')' ||
         *p == '/') {
       tokens[i].ty = *p;
@@ -85,6 +95,7 @@ void tokenize(char *user_input) {
 // 抽象構文木のノードの型を定義
 enum {
   ND_NUM = 256, // 整数のノードの型
+  ND_EQ,        // 比較演算子'=='のノードの型
 };
 
 typedef struct Node {
@@ -96,6 +107,8 @@ typedef struct Node {
 
 // パーサの関数宣言
 Node *expr();
+Node *equiality();
+Node *add();
 Node *mul();
 Node *unary();
 Node *term();
@@ -126,12 +139,27 @@ int consume(int ty) {
 // パーサ
 //
 // 生成規則:
-// expr = mul ("+" mul | "-" mul)*
+// expr = equiality
+// equiality = add ("==" add)*
+// add = mul ("+" mul | "-" mul)*
 // mul  = unary ("*" unary | "/" unary)*
 // unary = ("+" | "-")? term
 // term = num | "(" expr ")"
 //
 Node *expr() {
+  Node *node = equiality();
+  return node;
+}
+
+Node *equiality() {
+  Node *node = add();
+  if (consume(TK_EQ))
+    node = new_node(ND_EQ, node, add());
+  else
+    return node;
+}
+
+Node *add() {
   Node *node = mul();
 
   for (;;) {
@@ -210,6 +238,14 @@ void gen(Node *node) {
     printf("  cqo\n");
     // idivはRDXとRAXをとって128bitと見なして、それを引数レジスタで除算
     printf("  idiv rdi\n");
+    break;
+  case ND_EQ:
+    // 比較した結果をフラグレジスタにセット
+    printf("  cmp rax, rdi\n");
+    // フラグレジスタの値を、al(RAX下位8bitの別名)へセット
+    printf("  sete al\n");
+    // 上位56bitをゼロで埋めてセットする
+    printf(" movzb rax, al\n");
     break;
   }
 
