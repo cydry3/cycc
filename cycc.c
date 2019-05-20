@@ -89,7 +89,7 @@ void tokenize(char *user_input) {
       continue;
     }
 
-    if (*p == '<') {
+    if (*p == '<' || *p == '>') {
       tokens[i].ty = *p;
       tokens[i].input = p;
       i++;
@@ -173,7 +173,7 @@ int consume(int ty) {
 // 生成規則:
 // expr = equiality
 // equiality = relational ("==" relational | "!=" relational)*
-// relational = add ("<" add | "<=" add | ">=" add)*
+// relational = add ("<" add | "<=" add | ">=" add | ">" add)*
 // add = mul ("+" mul | "-" mul)*
 // mul  = unary ("*" unary | "/" unary)*
 // unary = ("+" | "-")? term
@@ -207,6 +207,9 @@ Node *relational() {
       node = new_node(ND_LE, node, add());
     else if (consume(TK_GE))
       node = new_node(ND_LE, add(), node);
+    else if (consume('>'))
+      // 両辺を入れ替え, 'LESS'のノードを作る
+      node = new_node('<', add(), node);
     else
       return node;
   }
