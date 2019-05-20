@@ -92,7 +92,7 @@ void tokenize(char *user_input) {
     }
 
     if (*p == '+' || *p == '-' || *p == '*' || *p == '(' || *p == ')' ||
-        *p == '/') {
+        *p == '/' || *p == '=') {
       Token *token = new_token();
       token->ty = *p;
       token->input = p;
@@ -133,6 +133,7 @@ void tokenize(char *user_input) {
 
 // パーサの関数宣言
 Node *expr();
+Node *assign();
 Node *equiality();
 Node *relational();
 Node *add();
@@ -173,7 +174,8 @@ int consume(int ty) {
 // パーサ
 //
 // 生成規則:
-// expr = equiality
+// expr = assign
+// assign = equiality ("=" assign)?
 // equiality = relational ("==" relational | "!=" relational)*
 // relational = add ("<" add | "<=" add | ">=" add | ">" add)*
 // add = mul ("+" mul | "-" mul)*
@@ -182,7 +184,14 @@ int consume(int ty) {
 // term = num | ident | "(" expr ")"
 //
 Node *expr() {
+  Node *node = assign();
+  return node;
+}
+
+Node *assign() {
   Node *node = equiality();
+  if (consume('='))
+    node = new_node('=', node, assign());
   return node;
 }
 
