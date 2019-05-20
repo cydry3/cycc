@@ -81,7 +81,7 @@ extern int pos;
 void tokenize(char *user_input);
 
 // パーサの関数宣言
-Node *program();
+void program();
 
 // エラーを報告する関数
 // printfと同じ引数を受け取る

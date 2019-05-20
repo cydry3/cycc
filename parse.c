@@ -160,7 +160,7 @@ void tokenize(char *user_input) {
 }
 
 // パーサの関数宣言
-Node *program();
+void program();
 Node *stmt();
 Node *expr();
 Node *assign();
@@ -219,7 +219,7 @@ Node *code[100];
 // unary = ("+" | "-")? term
 // term = num | ident | "(" expr ")"
 //
-Node *program() {
+void program() {
   int i = 0;
   while (((Token *)tokens->data[pos])->ty != TK_EOF)
     code[i++] = stmt();

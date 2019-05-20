@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
   // トークナイズする
   tokenize(user_input);
   // パースする
-  Node *node = program();
+  program();
 
   // アセンブリの前半分
   printf(".intel_syntax noprefix\n");
