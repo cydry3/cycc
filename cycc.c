@@ -11,6 +11,7 @@ enum {
   TK_EQ,        // 比較演算子'=='を表すトークン
   TK_NE,        // 比較演算子'!='を表すトークン
   TK_LE,        // 比較演算子'<='を表すトークン
+  TK_GE,        // 比較演算子'>='を表すトークン
 };
 
 // トークンの型
@@ -80,6 +81,12 @@ void tokenize(char *user_input) {
       i++;
       p += 2;
       continue;
+    } else if (strncmp(p, ">=", 2) == 0) {
+      tokens[i].ty = TK_GE;
+      tokens[i].input = p;
+      i++;
+      p += 2;
+      continue;
     }
 
     if (*p == '+' || *p == '-' || *p == '*' || *p == '(' || *p == ')' ||
@@ -111,7 +118,7 @@ enum {
   ND_NUM = 256, // 整数のノードの型
   ND_EQ,        // 比較演算子'=='のノードの型
   ND_NE,        // 比較演算子'!='のノードの型
-  ND_LE,        // 比較演算子'<='のノードの型
+  ND_LE,        // 比較演算子'<='のノードの型('>='の場合は両辺を入れ替えて使用)
 };
 
 typedef struct Node {
@@ -158,7 +165,7 @@ int consume(int ty) {
 // 生成規則:
 // expr = equiality
 // equiality = relational ("==" relational | "!=" relational)*
-// relational = add ("<=" add)*
+// relational = add ("<=" add | ">=" add)*
 // add = mul ("+" mul | "-" mul)*
 // mul  = unary ("*" unary | "/" unary)*
 // unary = ("+" | "-")? term
@@ -188,6 +195,8 @@ Node *relational() {
   for (;;) {
     if (consume(TK_LE))
       node = new_node(ND_LE, node, add());
+    else if (consume(TK_GE))
+      node = new_node(ND_LE, add(), node);
     else
       return node;
   }
