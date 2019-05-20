@@ -266,7 +266,7 @@ Node *term() {
   if (consume('(')) {
     Node *node = expr();
     if (!consume(')'))
-      error_at(*(((Token *)(tokens->data[pos]))->input),
+      error_at((((Token *)(tokens->data[pos]))->input),
                "開きカッコに対する閉じカッコがありません");
     return node;
   }
