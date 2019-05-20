@@ -24,6 +24,52 @@ typedef struct {
 // 入力プログラム
 char *user_input;
 
+// 可変長ベクタ
+typedef struct {
+  void **data;
+  int capacity;
+  int len;
+} Vector;
+
+// 可変長ベクタの為の関数
+Vector *new_vector() {
+  Vector *vec = malloc(sizeof(Vector));
+  vec->data = malloc(sizeof(void *) * 16);
+  vec->capacity = 16;
+  vec->len = 0;
+  return vec;
+}
+void vec_push(Vector *vec, void *elem) {
+  if (vec->capacity == vec->len) {
+    vec->capacity *= 2;
+    vec->data = realloc(vec->data, sizeof(void *) * vec->capacity);
+  }
+  vec->data[vec->len++] = elem;
+}
+
+// 可変長ベクタの為のテストコード
+void expect(int line, int expected, int actual) {
+  if (expected == actual)
+    return;
+  fprintf(stderr, "%d: %d expected, but got %d\n", line, expected, actual);
+  exit(1);
+}
+void runtest() {
+  Vector *vec = new_vector();
+  expect(__LINE__, 0, vec->len);
+
+  for (int i = 0; i < 100; i++)
+    vec_push(vec, (void *)((long)i));
+
+  expect(__LINE__, 100, vec->len);
+  expect(__LINE__, 0, (long)vec->data[0]);
+  expect(__LINE__, 50, (long)vec->data[50]);
+  expect(__LINE__, 99, (long)vec->data[99]);
+
+  printf("OK\n");
+  return 0;
+}
+
 // トークナイズした結果のトークン列をこの配列に保存
 // 100個以上のトークンは来ないものとする　
 Token tokens[100];
@@ -332,6 +378,11 @@ int main(int argc, char **argv) {
   if (argc != 2) {
     fprintf(stderr, "引数の個数が正しくありません\n");
     return 1;
+  }
+
+  if (strncmp(argv[1], "-test", 5) == 0) {
+    runtest();
+    return 0;
   }
 
   user_input = argv[1];
