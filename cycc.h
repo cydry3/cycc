@@ -47,3 +47,6 @@ typedef struct Node {
 Vector *new_vector();
 void vec_push(Vector *vec, void *elem);
 void runtest();
+
+//　レジスタマシンでスタックマシンをエミュレートし、コンパイルする
+void gen(Node *node);
