@@ -11,7 +11,7 @@ int main(int argc, char **argv) {
     return 0;
   }
 
-  // 可変長ベクタを初期化する
+  // トークンの可変長ベクタを初期化する
   tokens = new_vector();
   // 変数のマップを初期化する
   var_map = new_map();
@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
   printf("main:\n");
 
   // プロローグ
-  // 変数26個文の領域を確保する
+  // 変数の領域を確保する
   printf("  push rbp\n");
   printf("  mov rbp, rsp\n");
   printf("  sub rsp, %d\n", var_count * 8);

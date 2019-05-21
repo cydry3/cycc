@@ -1,6 +1,6 @@
 #include "cycc.h"
 
-// １文字変数'a'~'z'を左辺値として評価する
+// 変数を左辺値として評価する
 void gen_lval(Node *node) {
   if (node->ty != ND_IDENT)
     error("代入の左辺値が変数ではありません");

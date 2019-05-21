@@ -33,7 +33,7 @@ void error_at(char *loc, char *msg) {
   exit(1);
 }
 
-// トークンを構成する文字が判定
+// トークンを構成する文字か判定
 int is_alnum(char c) {
   return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') ||
          ('0' <= c && c <= '9') || (c == '_');
@@ -55,7 +55,7 @@ void tokenize(char *user_input) {
 
   int i = 0;
   while (*p) {
-    // すきっぷ空白文字
+    // 空白文字をスキップ
     if (isspace(*p)) {
       p++;
       continue;
@@ -233,7 +233,7 @@ Node *code[100];
 // 生成規則:
 // program = stmt*
 // stmt = expr ";"
-// 	| "return" expr ":"
+// 	| "return" expr ";"
 // expr = assign
 // assign = equiality ("=" assign)?
 // equiality = relational ("==" relational | "!=" relational)*
