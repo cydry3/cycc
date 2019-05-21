@@ -116,6 +116,17 @@ void tokenize(char *user_input) {
       continue;
     }
 
+    // for文
+    if (strncmp(p, "for", 3) == 0 && !is_alnum(p[3])) {
+      Token *token = new_token();
+      token->ty = TK_FOR;
+      token->input = p;
+      vec_push(tokens, token);
+      i++;
+      p += 3;
+      continue;
+    }
+
     // 比較演算子
     if (strncmp(p, "==", 2) == 0) {
       Token *token = new_token();
@@ -258,6 +269,15 @@ int consume(int ty) {
   return 1;
 }
 
+// 次のトークンを先読みし、期待したトークンかを確認する
+// トークンは消費しない
+int forward(int ty) {
+  int next_pos = pos + 1;
+  if (((Token *)(tokens->data[next_pos]))->ty != ty)
+    return 0;
+  return 1;
+}
+
 // パースされた複数のステートメントを100個まで格納
 Node *code[100];
 
@@ -269,6 +289,7 @@ Node *code[100];
 // 	| "return" expr ";"
 // 	| "if" "(" expr ")" stmt ("else" stmt)?
 // 	| "while" "(" expr ")" stmt
+// 	| "for" "(" expr? ";" expr? ":"  expr? ")" stmt
 // expr = assign
 // assign = equiality ("=" assign)?
 // equiality = relational ("==" relational | "!=" relational)*
@@ -324,6 +345,46 @@ Node *stmt() {
       error_at((((Token *)(tokens->data[pos]))->input),
                "')'ではないトークンです");
     node->rhs = stmt();
+    return node;
+  }
+
+  if (consume(TK_FOR)) {
+    node = malloc(sizeof(Node));
+    node->ty = ND_FOR;
+
+    Node *node_lhs = malloc(sizeof(Node));
+    node->lhs = node_lhs;
+    Node *node_rhs = malloc(sizeof(Node));
+    node->rhs = node_rhs;
+
+    if (!consume('('))
+      error_at((((Token *)(tokens->data[pos]))->input),
+               "'('ではないトークンです");
+
+    // expr? ; expr? ; expr?)
+    if (!forward(';')) {
+      node->lhs->lhs = expr();
+    }
+    if (!consume(';'))
+      error_at((((Token *)(tokens->data[pos]))->input),
+               "')'ではないトークンです");
+
+    if (!forward(';')) {
+      node->lhs->rhs = expr();
+    }
+    if (!consume(';'))
+      error_at((((Token *)(tokens->data[pos]))->input),
+               "')'ではないトークンです");
+
+    if (!forward(')')) {
+      node->rhs->lhs = expr();
+    }
+    if (!consume(')'))
+      error_at((((Token *)(tokens->data[pos]))->input),
+               "')'ではないトークンです");
+
+    node->rhs->rhs = stmt();
+
     return node;
   }
 

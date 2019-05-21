@@ -17,6 +17,7 @@ enum {
   TK_IF,        // if文を表すトークン
   TK_ELSE,      // elseを表すトークン
   TK_WHIL,      // while文を表すトークン
+  TK_FOR,       // for文を表すトークン
 };
 
 // トークンの型
@@ -51,6 +52,7 @@ enum {
   ND_IF,        // if文の型
   ND_IFELSE,    // if-elseの型
   ND_WHIL,      // while文の型
+  ND_FOR,       // for文の型
 };
 
 typedef struct Node {
