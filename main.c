@@ -25,6 +25,9 @@ int main(int argc, char **argv) {
   // パースする
   program();
 
+  // ジャンプ先ラベルのカウンタを初期化する
+  jmp_label_count = 0;
+
   // アセンブリの前半分
   printf(".intel_syntax noprefix\n");
   printf(".global main\n");
