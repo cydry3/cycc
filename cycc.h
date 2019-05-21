@@ -15,6 +15,7 @@ enum {
   TK_GE,        // 比較演算子'>='を表すトークン
   TK_RETURN,    // return文
   TK_IF,        // if文を表すトークン
+  TK_ELSE,      // elseを表すトークン
 };
 
 // トークンの型
@@ -47,6 +48,7 @@ enum {
   ND_LE,        // 比較演算子'<='のノードの型('>='の場合は両辺を入れ替えて使用)
   ND_RETURN,    // return文の型
   ND_IF,        // if文の型
+  ND_IFELSE,    // if-elseの型
 };
 
 typedef struct Node {

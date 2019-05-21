@@ -94,6 +94,16 @@ void tokenize(char *user_input) {
       continue;
     }
 
+    // else
+    if (strncmp(p, "else", 4) == 0 && !is_alnum(p[4])) {
+      Token *token = new_token();
+      token->ty = TK_ELSE;
+      token->input = p;
+      vec_push(tokens, token);
+      i++;
+      p += 4;
+      continue;
+    }
     // 比較演算子
     if (strncmp(p, "==", 2) == 0) {
       Token *token = new_token();
@@ -245,7 +255,7 @@ Node *code[100];
 // program = stmt*
 // stmt = expr ";"
 // 	| "return" expr ";"
-// 	| "if" "(" expr ")" stmt
+// 	| "if" "(" expr ")" stmt ("else" stmt)?
 // expr = assign
 // assign = equiality ("=" assign)?
 // equiality = relational ("==" relational | "!=" relational)*
@@ -276,6 +286,17 @@ Node *stmt() {
       error_at((((Token *)(tokens->data[pos]))->input),
                "')'ではないトークンです");
     node->rhs = stmt();
+
+    // if文がelseを持つ場合, nodeの型を変更する
+    if (consume(TK_ELSE)) {
+      node->ty = ND_IFELSE;
+
+      Node *rhs_node = malloc(sizeof(Node));
+      rhs_node->lhs = node->rhs;
+      rhs_node->rhs = stmt();
+      node->rhs = rhs_node;
+    }
+
     return node;
   }
 

@@ -61,5 +61,7 @@ try 6 "foo = 1; bar = 2 + 3; return foo + bar;"
 try 2 "if (1) 2;"
 try 7 "a = 1; if (a == 1) a = 7; return a;"
 try 1 "a = 1; if (a != 1) a = 7; return a;"
+try 7 "a = 1; if (a == 1) a = 7; else a = 3; return a;"
+try 5 "a = 1; if (a != 1) a = 7; else a = 3; return a + 2;"
 
 echo OK

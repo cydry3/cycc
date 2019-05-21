@@ -41,6 +41,22 @@ void gen(Node *node) {
     return;
   }
 
+  if (node->ty == ND_IFELSE) {
+    int else_label = jmp_label_count++;
+    int end_label = jmp_label_count++;
+
+    gen(node->lhs);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  je .Lelse%03d\n", else_label);
+    gen(node->rhs->lhs);
+    printf("  jmp .Lend%03d\n", end_label);
+    printf(".Lelse%03d:\n", else_label);
+    gen(node->rhs->rhs);
+    printf(".Lend%03d:\n", end_label);
+    return;
+  }
+
   if (node->ty == ND_IDENT) {
     gen_lval(node);
     printf("  pop rax\n");
