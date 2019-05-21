@@ -20,6 +20,7 @@ enum {
 typedef struct {
   int ty;      // トークンの型
   int val;     // tyがTK_NUMの場合、その数値
+  char *name;  // tyがTK_IDENTの場合、その名前
   char *input; // トークン文字列（エラーメッセージ用）
 } Token;
 
@@ -51,7 +52,7 @@ typedef struct Node {
   struct Node *lhs; // 左辺
   struct Node *rhs; // 右辺
   int val;          // tyがND_NUMの場合のみ使う
-  char name;        // tyがND_IDENTの場合のみ使う
+  char *name;       // tyがND_IDENTの場合のみ使う
 } Node;
 
 // 可変長ベクタの為の関数
@@ -89,3 +90,9 @@ void error(char *fmt, ...);
 
 // パースされた複数のステートメントを100個まで格納
 extern Node *code[100];
+
+// 複数文字のローカル変数の為のマップ
+extern Map *var_map;
+
+// 変数の為のカウンター
+extern int var_count;

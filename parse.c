@@ -39,10 +39,19 @@ int is_alnum(char c) {
          ('0' <= c && c <= '9') || (c == '_');
 }
 
+// トークンを複製する
+char *token_dup(const char *p, int siz) {
+  char *tmp = malloc(siz + 1);
+  strncpy(tmp, p, siz);
+  tmp[siz] = '\0';
+  return tmp;
+}
+
 // user_input が指している文字列を
 // トークンに分割してtokensに保存
 void tokenize(char *user_input) {
   char *p = user_input;
+  char *bp;
 
   int i = 0;
   while (*p) {
@@ -140,13 +149,28 @@ void tokenize(char *user_input) {
       continue;
     }
 
-    if ('a' <= *p && *p <= 'z') {
+    if ('a' <= *p && *p <= 'z' && !is_alnum(*(p + 1))) {
       Token *token = new_token();
       token->ty = TK_IDENT;
       token->input = p;
+      token->name = token_dup(p, 1);
       vec_push(tokens, token);
       i++;
       p++;
+      continue;
+    }
+
+    if (('a' <= *p && *p <= 'z') || ('A' <= *p && *p <= 'Z')) {
+      bp = p;
+      for (; is_alnum(*p); p++)
+        ;
+
+      Token *token = new_token();
+      token->ty = TK_IDENT;
+      token->input = p;
+      token->name = token_dup(bp, (p - bp));
+      vec_push(tokens, token);
+      i++;
       continue;
     }
 
@@ -186,7 +210,7 @@ Node *new_node_num(int val) {
   return node;
 }
 
-Node *new_node_ident(char name) {
+Node *new_node_ident(char *name) {
   Node *node = malloc(sizeof(Node));
   node->ty = ND_IDENT;
   node->name = name;
@@ -320,6 +344,12 @@ Node *unary() {
   return term();
 }
 
+// 複数文字のローカル変数の為のマップ
+Map *var_map;
+
+// 変数の為のカウンター
+int var_count;
+
 // termはexprやmulのように左結合でない
 Node *term() {
   // 開きカッコからはじまるなら、"(" expr ")"
@@ -334,7 +364,15 @@ Node *term() {
   if (((Token *)(tokens->data[pos]))->ty == TK_NUM)
     return new_node_num(((Token *)tokens->data[pos++])->val);
   else if (((Token *)(tokens->data[pos]))->ty == TK_IDENT) {
-    return new_node_ident(*((Token *)tokens->data[pos++])->input);
+    char *var_name = ((Token *)tokens->data[pos++])->name;
+    Node *node = new_node_ident(var_name);
+
+    if (map_get(var_map, var_name) == NULL) {
+      map_put(var_map, var_name, (void *)var_count);
+      var_count++;
+    }
+
+    return node;
   }
 
   error_at(((Token *)(tokens->data[pos]))->input,

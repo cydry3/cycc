@@ -54,5 +54,9 @@ try 5 "a = b = 3; a = 5; c = 2; a;"
 try 11 "return 11;"
 try 14 "a = 3; b = 5 * 6 - 8; return a + b / 2;"
 try 5 "return 5; return 8;"
+try 23 "foo = 23;"
+try 23 "foo = 23; bar = 24; foo;"
+try 29 "foo = 23; bar = 29; buzz = 31; bar;"
+try 6 "foo = 1; bar = 2 + 3; return foo + bar;"
 
 echo OK

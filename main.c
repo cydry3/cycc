@@ -13,6 +13,12 @@ int main(int argc, char **argv) {
 
   // 可変長ベクタを初期化する
   tokens = new_vector();
+  // 変数のマップを初期化する
+  var_map = new_map();
+  // 変数の個数カウンタを初期化する
+  var_count = 0;
+
+  // ユーザの入力
   user_input = argv[1];
   // トークナイズする
   tokenize(user_input);
@@ -28,7 +34,7 @@ int main(int argc, char **argv) {
   // 変数26個文の領域を確保する
   printf("  push rbp\n");
   printf("  mov rbp, rsp\n");
-  printf("  sub rsp, 208\n");
+  printf("  sub rsp, %d\n", var_count * 8);
 
   // コードを生成
   for (int i = 0; code[i]; i++) {
