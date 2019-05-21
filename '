@@ -86,7 +86,7 @@ void tokenize(char *user_input) {
     // if文
     if (strncmp(p, "if", 2) == 0 && !is_alnum(p[2])) {
       Token *token = new_token();
-      token->ty = TK_IF;
+      token->ty = TK_RETURN;
       token->input = p;
       vec_push(tokens, token);
       i++;
@@ -287,9 +287,10 @@ Node *stmt() {
     node = expr();
   }
 
-  if (!consume(';'))
+  if (!consume(';')) {
     error_at((((Token *)(tokens->data[pos]))->input),
              "';'ではないトークンです");
+  }
   return node;
 }
 

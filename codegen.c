@@ -1,5 +1,8 @@
 #include "cycc.h"
 
+// if文のジャンプ先のラベルをユニークにする為のカウンタ
+int jmp_label_count;
+
 // 変数を左辺値として評価する
 void gen_lval(Node *node) {
   if (node->ty != ND_IDENT)
@@ -24,6 +27,17 @@ void gen(Node *node) {
     printf("  mov rsp, rbp\n");
     printf("  pop rbp\n");
     printf("  ret\n");
+    return;
+  }
+
+  if (node->ty == ND_IF) {
+    gen(node->lhs);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  je .Lend%03d\n", jmp_label_count);
+    gen(node->rhs);
+    printf(".Lend%03d:\n", jmp_label_count);
+    jmp_label_count++;
     return;
   }
 

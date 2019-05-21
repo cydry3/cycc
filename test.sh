@@ -58,5 +58,8 @@ try 23 "foo = 23;"
 try 23 "foo = 23; bar = 24; foo;"
 try 29 "foo = 23; bar = 29; buzz = 31; bar;"
 try 6 "foo = 1; bar = 2 + 3; return foo + bar;"
+try 2 "if (1) 2;"
+try 7 "a = 1; if (a == 1) a = 7; return a;"
+try 1 "a = 1; if (a != 1) a = 7; return a;"
 
 echo OK
