@@ -57,6 +57,21 @@ void gen(Node *node) {
     return;
   }
 
+  if (node->ty == ND_WHIL) {
+    int begin_label = jmp_label_count++;
+    int end_label = jmp_label_count++;
+
+    printf(".Lbegin%03d:\n", begin_label);
+    gen(node->lhs);
+    printf("  pop rax\n");
+    printf("  cmp rax, 0\n");
+    printf("  je .Lend%03d\n", end_label);
+    gen(node->rhs);
+    printf("  jmp .Lbegin%03d\n", begin_label);
+    printf(".Lend%03d:\n", end_label);
+    return;
+  }
+
   if (node->ty == ND_IDENT) {
     gen_lval(node);
     printf("  pop rax\n");

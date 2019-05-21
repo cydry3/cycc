@@ -104,6 +104,18 @@ void tokenize(char *user_input) {
       p += 4;
       continue;
     }
+
+    // while文
+    if (strncmp(p, "while", 5) == 0 && !is_alnum(p[5])) {
+      Token *token = new_token();
+      token->ty = TK_WHIL;
+      token->input = p;
+      vec_push(tokens, token);
+      i++;
+      p += 5;
+      continue;
+    }
+
     // 比較演算子
     if (strncmp(p, "==", 2) == 0) {
       Token *token = new_token();
@@ -256,6 +268,7 @@ Node *code[100];
 // stmt = expr ";"
 // 	| "return" expr ";"
 // 	| "if" "(" expr ")" stmt ("else" stmt)?
+// 	| "while" "(" expr ")" stmt
 // expr = assign
 // assign = equiality ("=" assign)?
 // equiality = relational ("==" relational | "!=" relational)*
@@ -297,6 +310,20 @@ Node *stmt() {
       node->rhs = rhs_node;
     }
 
+    return node;
+  }
+
+  if (consume(TK_WHIL)) {
+    node = malloc(sizeof(Node));
+    node->ty = ND_WHIL;
+    if (!consume('('))
+      error_at((((Token *)(tokens->data[pos]))->input),
+               "'('ではないトークンです");
+    node->lhs = expr();
+    if (!consume(')'))
+      error_at((((Token *)(tokens->data[pos]))->input),
+               "')'ではないトークンです");
+    node->rhs = stmt();
     return node;
   }
 

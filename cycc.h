@@ -16,6 +16,7 @@ enum {
   TK_RETURN,    // return文
   TK_IF,        // if文を表すトークン
   TK_ELSE,      // elseを表すトークン
+  TK_WHIL,      // while文を表すトークン
 };
 
 // トークンの型
@@ -49,6 +50,7 @@ enum {
   ND_RETURN,    // return文の型
   ND_IF,        // if文の型
   ND_IFELSE,    // if-elseの型
+  ND_WHIL,      // while文の型
 };
 
 typedef struct Node {
