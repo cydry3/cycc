@@ -108,12 +108,58 @@ void gen(Node *node) {
   if (node->ty == ND_FUNC) {
     char *func_name = node->name;
     if (node->rhs != NULL) {
+      int else_label_before = jmp_label_count++;
+      int end_label_before = jmp_label_count++;
+      int else_label_after = jmp_label_count++;
+      int end_label_after = jmp_label_count++;
+
+      // 引数を評価
       gen(node->rhs);
       printf("  pop rax\n");
       printf("  mov rdi, rax\n");
+
+      // スタックポインタが16の倍数であるかを判定し、揃える
+      // 関数呼び出し前の処理
+      // 揃っていた場合は0を、そうでない場合は1をスタックに積む
+      printf("  mov rax, [rsp]\n");
+      printf("  mov r10, %d\n", (16 - 1)); // x % 2**n == x & 2**n-1
+      printf("  and rax, r10\n");          // 剰余をAND演算で行う
+      printf("  cmp rax, 0\n");
+      printf("  jne .Lelse%03d\n", else_label_before);
+      printf("  push 0\n");
+      printf("  push 0\n");
+      printf("  jmp .Lend%03d\n", end_label_before);
+      printf(".Lelse%03d:\n", else_label_before);
+      printf("  push 1\n");
+      printf(".Lend%03d:\n", end_label_before);
+
+      // 関数呼び出し
       printf("  mov rax, 1\n");
+      printf("  call %s\n", func_name);
+
+      // スタックトップを一時RDIへ退避
+      printf("  pop rax\n");
+      printf("  mov rdi, rax\n");
+
+      // スタックポインタが16の倍数であるかを判定し、揃える
+      // 関数呼び出し後の処理
+      // 揃っていた場合は0が、そうでない場合は1がスタックに積まれているハズ
+      printf("  pop rax\n");
+      printf("  cmp rax, 0\n");
+      printf("  jne .Lelse%03d\n", else_label_after);
+      printf("  pop rax\n");
+      printf("  pop rax\n");
+      printf("  jmp .Lend%03d\n", end_label_after);
+      printf(".Lelse%03d:\n", else_label_after);
+      printf("  pop rax\n");
+      printf(".Lend%03d:\n", end_label_after);
+
+      // スタックトップだった値をRDIから復帰
+      printf("  mov rax, rdi\n");
+      printf("  push rax\n");
+    } else {
+      printf("  call %s\n", func_name);
     }
-    printf("  call %s\n", func_name);
     return;
   }
 
