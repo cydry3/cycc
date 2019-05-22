@@ -110,7 +110,6 @@ void gen(Node *node) {
     if (node->args->len != 0) {
       int else_label_before = jmp_label_count++;
       int end_label_before = jmp_label_count++;
-      int else_label_after = jmp_label_count++;
       int end_label_after = jmp_label_count++;
 
       // 引数を評価
@@ -140,6 +139,7 @@ void gen(Node *node) {
       // 関数呼び出し
       printf("  mov rax, %d\n", argc);
       printf("  call %s\n", func_name);
+      printf("  push rax\n");
 
       // スタックトップを一時RDIへ退避
       printf("  pop rax\n");
@@ -148,13 +148,10 @@ void gen(Node *node) {
       // スタックポインタが16の倍数であるかを判定し、揃える
       // 関数呼び出し後の処理
       // 揃っていた場合は0が、そうでない場合は1がスタックに積まれているハズ
+
       printf("  pop rax\n");
       printf("  cmp rax, 0\n");
-      printf("  jne .Lelse%03d\n", else_label_after);
-      printf("  pop rax\n");
-      printf("  pop rax\n");
-      printf("  jmp .Lend%03d\n", end_label_after);
-      printf(".Lelse%03d:\n", else_label_after);
+      printf("  jne .Lend%03d\n", end_label_after);
       printf("  pop rax\n");
       printf(".Lend%03d:\n", end_label_after);
 
@@ -163,6 +160,7 @@ void gen(Node *node) {
       printf("  push rax\n");
     } else {
       printf("  call %s\n", func_name);
+      printf("  push rax\n");
     }
     return;
   }
