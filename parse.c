@@ -310,7 +310,7 @@ Node *code[100];
 // mul  = unary ("*" unary | "/" unary)*
 // unary = ("+" | "-")? term
 // term = num
-//	| ident ("(" ")")?
+//	| ident ("(" expr? ")")?
 //	| "(" expr ")"
 //
 void program() {
@@ -542,6 +542,12 @@ Node *term() {
     if (consume('(')) {
       node->ty = ND_FUNC;
 
+      if (consume(')')) {
+        node->rhs = NULL;
+        return node;
+      }
+
+      node->rhs = expr();
       if (!consume(')'))
         error_at((((Token *)(tokens->data[pos]))->input),
                  "開きカッコに対する閉じカッコがありません");

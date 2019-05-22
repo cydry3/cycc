@@ -1,11 +1,16 @@
 #!/bin/bash
 try() {
-    expected="$1"
-    input="$2"
+    if [ "$1" = "-out" ]; then
+	expected="$2"
+	input="$3"
+    else
+	expected="$1"
+	input="$2"
+    fi
 
     ./cycc "$input" > tmp.s
 
-    if [ "$1" = "OK" ]; then
+    if [ "$1" = "-out" ]; then
 	gcc -o tmp tmp.s foo.o
 	actual=`./tmp`
     else
@@ -79,6 +84,7 @@ try 2 "if (1) {return 2;}"
 try 8 "a = 1; if (a) {a = 7; a = 8;} return a;"
 try 120  "a = 1; for (i = 5; i > 0; i = i - 1) {a = a * i;} return a;"
 try 120  "a = 1; val = 0; for (i = 5; i > 0; i = i - 1) {a = a * i; val = a;} return val;"
-try OK "foo();"
+try -out OK "foo();"
+try -out 31 "bar(31);"
 
 echo OK

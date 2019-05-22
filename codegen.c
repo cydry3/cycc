@@ -107,6 +107,12 @@ void gen(Node *node) {
 
   if (node->ty == ND_FUNC) {
     char *func_name = node->name;
+    if (node->rhs != NULL) {
+      gen(node->rhs);
+      printf("  pop rax\n");
+      printf("  mov rdi, rax\n");
+      printf("  mov rax, 1\n");
+    }
     printf("  call %s\n", func_name);
     return;
   }
