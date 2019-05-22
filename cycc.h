@@ -54,6 +54,7 @@ enum {
   ND_WHIL,      // while文の型
   ND_FOR,       // for文の型
   ND_BLOCK,     // ブロック（複文)の型
+  ND_FUNC,      // 関数の型
 };
 
 typedef struct Node {
@@ -109,3 +110,6 @@ extern int var_count;
 
 // if文のジャンプ先のラベルをユニークにする為のカウンタ
 extern int jmp_label_count;
+
+// 関数呼び出しの為に、作成した仮の関数
+int foo();

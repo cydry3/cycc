@@ -309,7 +309,9 @@ Node *code[100];
 // add = mul ("+" mul | "-" mul)*
 // mul  = unary ("*" unary | "/" unary)*
 // unary = ("+" | "-")? term
-// term = num | ident | "(" expr ")"
+// term = num
+//	| ident ("(" ")")?
+//	| "(" expr ")"
 //
 void program() {
   int i = 0;
@@ -526,6 +528,7 @@ Node *term() {
   // 上記でない場合は、numかidentが来るハズ
   if (((Token *)(tokens->data[pos]))->ty == TK_NUM)
     return new_node_num(((Token *)tokens->data[pos++])->val);
+
   else if (((Token *)(tokens->data[pos]))->ty == TK_IDENT) {
     char *var_name = ((Token *)tokens->data[pos++])->name;
     Node *node = new_node_ident(var_name);
@@ -533,6 +536,15 @@ Node *term() {
     if (map_get(var_map, var_name) == NULL) {
       map_put(var_map, var_name, (void *)var_count);
       var_count++;
+    }
+
+    // 関数であるか判定
+    if (consume('(')) {
+      node->ty = ND_FUNC;
+
+      if (!consume(')'))
+        error_at((((Token *)(tokens->data[pos]))->input),
+                 "開きカッコに対する閉じカッコがありません");
     }
 
     return node;

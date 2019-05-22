@@ -4,9 +4,16 @@ try() {
     input="$2"
 
     ./cycc "$input" > tmp.s
-    gcc -o tmp tmp.s
-    ./tmp
-    actual="$?"
+
+    if [ "$1" = "OK" ]; then
+	gcc -o tmp tmp.s foo.o
+	actual=`./tmp`
+    else
+	gcc -o tmp tmp.s
+	./tmp
+	actual="$?"
+    fi
+
 
     if [ "$actual" = "$expected" ]; then
 	echo "$input => $actual"
@@ -72,5 +79,6 @@ try 2 "if (1) {return 2;}"
 try 8 "a = 1; if (a) {a = 7; a = 8;} return a;"
 try 120  "a = 1; for (i = 5; i > 0; i = i - 1) {a = a * i;} return a;"
 try 120  "a = 1; val = 0; for (i = 5; i > 0; i = i - 1) {a = a * i; val = a;} return val;"
+try OK "foo();"
 
 echo OK

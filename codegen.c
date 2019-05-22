@@ -105,6 +105,12 @@ void gen(Node *node) {
     return;
   }
 
+  if (node->ty == ND_FUNC) {
+    char *func_name = node->name;
+    printf("  call %s\n", func_name);
+    return;
+  }
+
   if (node->ty == '=') {
     gen_lval(node->lhs);
     gen(node->rhs);
