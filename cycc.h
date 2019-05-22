@@ -54,7 +54,8 @@ enum {
   ND_WHIL,      // while文の型
   ND_FOR,       // for文の型
   ND_BLOCK,     // ブロック（複文)の型
-  ND_FUNC,      // 関数の型
+  ND_FUNC,      // 関数呼び出しの型
+  ND_DEF_FUNC,  // 関数定義の型
 };
 
 typedef struct Node {
@@ -100,8 +101,8 @@ void program();
 // printfと同じ引数を受け取る
 void error(char *fmt, ...);
 
-// パースされた複数のステートメントを100個まで格納
-extern Node *code[100];
+// パースされた複数の関数定義を100個まで格納
+extern Node *funcs[100];
 
 // 複数文字のローカル変数の為のマップ
 extern Map *var_map;

@@ -31,24 +31,10 @@ int main(int argc, char **argv) {
   // アセンブリの前半分
   printf(".intel_syntax noprefix\n");
   printf(".global main\n");
-  printf("main:\n");
-
-  // プロローグ
-  // 変数の領域を確保する
-  printf("  push rbp\n");
-  printf("  mov rbp, rsp\n");
-  printf("  sub rsp, %d\n", var_count * 8);
 
   // コードを生成
-  for (int i = 0; code[i]; i++) {
-    gen(code[i]);
+  for (int i = 0; funcs[i]; i++)
+    gen(funcs[i]);
 
-    printf("  pop rax\n");
-  }
-
-  // エピローグ
-  printf("  mov rsp, rbp\n");
-  printf("  pop rbp\n");
-  printf("  ret\n");
   return 0;
 }

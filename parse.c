@@ -240,6 +240,7 @@ void tokenize(char *user_input) {
 
 // パーサの関数宣言
 void program();
+Node *func();
 Node *stmt();
 Node *expr();
 Node *assign();
@@ -292,10 +293,14 @@ int forward(int ty) {
 // パースされた複数のステートメントを100個まで格納
 Node *code[100];
 
+// パースされた複数の関数定義を100個まで格納
+Node *funcs[100];
+
 // パーサ
 //
 // 生成規則:
-// program = stmt*
+// program = func*
+// func = ident "(" (ident? (, ident)* )? ")" "{" stmt* "}"
 // stmt = expr ";"
 // 	| "{" stmt* "}"
 // 	| "return" expr ";"
@@ -315,9 +320,49 @@ Node *code[100];
 //
 void program() {
   int i = 0;
-  while (((Token *)tokens->data[pos])->ty != TK_EOF)
-    code[i++] = stmt();
-  code[i] = NULL;
+  while (((Token *)tokens->data[pos])->ty != TK_EOF) {
+    funcs[i++] = func();
+  }
+  funcs[i] = NULL;
+}
+
+Node *func() {
+  Node *node;
+
+  // 関数名
+  if (((Token *)(tokens->data[pos]))->ty == TK_IDENT) {
+    char *func_label = ((Token *)tokens->data[pos++])->name;
+    node = new_node_ident(func_label);
+    node->ty = ND_DEF_FUNC;
+    node->args = new_vector();
+  } else {
+    error_at(((Token *)(tokens->data[pos]))->input,
+             "関数名からはじまっていません");
+  }
+
+  // 仮引数
+  if (!consume('('))
+    error_at((((Token *)(tokens->data[pos]))->input),
+             "仮引数の開きカッコがありません");
+  if (!consume(')'))
+    error_at((((Token *)(tokens->data[pos]))->input),
+             "仮引数の閉じカッコがありません");
+
+  // ブロック
+  if (consume('{')) {
+    node->block = new_vector();
+
+    while (!forward('}')) {
+      vec_push(node->block, (void *)stmt());
+      if (consume('}'))
+        break;
+    }
+  } else {
+    error_at((((Token *)(tokens->data[pos]))->input),
+             "'{'ではないトークンです");
+  }
+
+  return node;
 }
 
 Node *stmt() {

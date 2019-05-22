@@ -165,6 +165,31 @@ void gen(Node *node) {
     return;
   }
 
+  // 関数定義
+  if (node->ty == ND_DEF_FUNC) {
+    char *func_label = node->name;
+    printf("%s:\n", func_label);
+
+    // プロローグ
+    printf("  push rbp\n");
+    printf("  mov rbp, rsp\n");
+
+    // 変数の領域を確保する
+    printf("  sub rsp, %d\n", var_count * 8);
+
+    // コードを生成
+    for (int i = 0; i < node->block->len; i++) {
+      gen((Node *)node->block->data[i]);
+      printf("  pop rax\n");
+    }
+
+    // エピローグ
+    printf("  mov rsp, rbp\n");
+    printf("  pop rbp\n");
+    printf("  ret\n");
+    return;
+  }
+
   if (node->ty == '=') {
     gen_lval(node->lhs);
     gen(node->rhs);
