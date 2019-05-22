@@ -86,5 +86,7 @@ try 120  "a = 1; for (i = 5; i > 0; i = i - 1) {a = a * i;} return a;"
 try 120  "a = 1; val = 0; for (i = 5; i > 0; i = i - 1) {a = a * i; val = a;} return val;"
 try -out OK "foo();"
 try -out 31 "bar(31);"
+try -out 7 "buzz(3, 4);"
+try -out 21 "fizz(1, 2, 3, 4, 5, 6);"
 
 echo OK

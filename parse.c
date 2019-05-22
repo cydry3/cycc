@@ -184,7 +184,7 @@ void tokenize(char *user_input) {
     }
 
     if (*p == '+' || *p == '-' || *p == '*' || *p == '(' || *p == ')' ||
-        *p == '/' || *p == '=') {
+        *p == '/' || *p == '=' || *p == ',') {
       Token *token = new_token();
       token->ty = *p;
       token->input = p;
@@ -310,7 +310,7 @@ Node *code[100];
 // mul  = unary ("*" unary | "/" unary)*
 // unary = ("+" | "-")? term
 // term = num
-//	| ident ("(" expr? ")")?
+//	| ident ("(" expr? (, expr)* ")")?
 //	| "(" expr ")"
 //
 void program() {
@@ -541,13 +541,16 @@ Node *term() {
     // 関数であるか判定
     if (consume('(')) {
       node->ty = ND_FUNC;
+      node->args = new_vector();
 
       if (consume(')')) {
-        node->rhs = NULL;
         return node;
       }
 
-      node->rhs = expr();
+      vec_push(node->args, (void *)expr());
+      for (; consume(',');)
+        vec_push(node->args, (void *)expr());
+
       if (!consume(')'))
         error_at((((Token *)(tokens->data[pos]))->input),
                  "開きカッコに対する閉じカッコがありません");

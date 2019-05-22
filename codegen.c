@@ -107,16 +107,20 @@ void gen(Node *node) {
 
   if (node->ty == ND_FUNC) {
     char *func_name = node->name;
-    if (node->rhs != NULL) {
+    if (node->args->len != 0) {
       int else_label_before = jmp_label_count++;
       int end_label_before = jmp_label_count++;
       int else_label_after = jmp_label_count++;
       int end_label_after = jmp_label_count++;
 
       // 引数を評価
-      gen(node->rhs);
-      printf("  pop rax\n");
-      printf("  mov rdi, rax\n");
+      int argc = node->args->len;
+      char *regs[6] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+      for (int i = 0; (i < argc) && (i < 6); i++) {
+        gen((Node *)node->args->data[i]);
+        printf("  pop rax\n");
+        printf("  mov %s, rax\n", regs[i]);
+      }
 
       // スタックポインタが16の倍数であるかを判定し、揃える
       // 関数呼び出し前の処理
@@ -134,7 +138,7 @@ void gen(Node *node) {
       printf(".Lend%03d:\n", end_label_before);
 
       // 関数呼び出し
-      printf("  mov rax, 1\n");
+      printf("  mov rax, %d\n", argc);
       printf("  call %s\n", func_name);
 
       // スタックトップを一時RDIへ退避
