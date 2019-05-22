@@ -53,6 +53,7 @@ enum {
   ND_IFELSE,    // if-elseの型
   ND_WHIL,      // while文の型
   ND_FOR,       // for文の型
+  ND_BLOCK,     // ブロック（複文)の型
 };
 
 typedef struct Node {
@@ -61,6 +62,7 @@ typedef struct Node {
   struct Node *rhs; // 右辺
   int val;          // tyがND_NUMの場合のみ使う
   char *name;       // tyがND_IDENTの場合のみ使う
+  Vector *block;    // tyがND_BLOCKの場合のみ使う
 } Node;
 
 // 可変長ベクタの為の関数

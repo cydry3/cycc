@@ -72,6 +72,17 @@ void tokenize(char *user_input) {
       continue;
     }
 
+    // ブロック
+    if (*p == '{' || *p == '}') {
+      Token *token = new_token();
+      token->ty = *p;
+      token->input = p;
+      vec_push(tokens, token);
+      i++;
+      p++;
+      continue;
+    }
+
     // return文
     if (strncmp(p, "return", 6) == 0 && !is_alnum(p[6])) {
       Token *token = new_token();
@@ -286,6 +297,7 @@ Node *code[100];
 // 生成規則:
 // program = stmt*
 // stmt = expr ";"
+// 	| "{" stmt* "}"
 // 	| "return" expr ";"
 // 	| "if" "(" expr ")" stmt ("else" stmt)?
 // 	| "while" "(" expr ")" stmt
@@ -388,10 +400,26 @@ Node *stmt() {
     return node;
   }
 
+  if (consume('{')) {
+    node = malloc(sizeof(Node));
+    node->ty = ND_BLOCK;
+    node->block = new_vector();
+
+    while (!forward('}')) {
+      vec_push(node->block, (void *)stmt());
+
+      if (consume('}'))
+        break;
+    }
+
+    return node;
+  }
+
   if (consume(TK_RETURN)) {
     node = malloc(sizeof(Node));
     node->ty = ND_RETURN;
     node->lhs = expr();
+
   } else {
     node = expr();
   }

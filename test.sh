@@ -66,5 +66,11 @@ try 5 "a = 1; if (a != 1) a = 7; else a = 3; return a + 2;"
 try 10  "i = 0; while (i < 10) i = i + 1; return i;"
 try 10  "a = 0; for (i = 0; i < 5; i = i + 1) a = a + i; return a;"
 try 120  "a = 1; for (i = 5; i > 0; i = i - 1) a = a * i; return a;"
+try 10  "i = 0; while (i < 10) { i = i + 1; } return i;"
+try 10  "i = 0; a = 0; while (i < 10) { i = i + 1; a = i;} return a;"
+try 2 "if (1) {return 2;}"
+try 8 "a = 1; if (a) {a = 7; a = 8;} return a;"
+try 120  "a = 1; for (i = 5; i > 0; i = i - 1) {a = a * i;} return a;"
+try 120  "a = 1; val = 0; for (i = 5; i > 0; i = i - 1) {a = a * i; val = a;} return val;"
 
 echo OK
