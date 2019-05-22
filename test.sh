@@ -93,5 +93,10 @@ try -out 31 "main(){ bar(31); }"
 try -out 7 "main(){ buzz(3, 4); }"
 try -out 21 "main(){ fizz(1, 2, 3, 4, 5, 6); }"
 try -out OK "def() { foo(); } main(){ def(); }"
+try -out 9 "def() { return 9; } main(){ a = def(); bar(a);}"
+try -out 9 "def(x) { a = x; bar(a); } main(){ def(9); }"
+try -out 42 "def(x, y) { a = x + y; bar(a); } main(){ def(11, 31); }"
+try -out 21 "def(a,b,c,d,e,f) { x = a + b * c; y = d * e - f; buzz(x, y);} main(){ def(1,2,3,4,5,6); }"
+try -out 7 "def(x, y) { return x + y; } main(){ a = def(3, 4); bar(a);}"
 
 echo OK

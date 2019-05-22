@@ -344,9 +344,30 @@ Node *func() {
   if (!consume('('))
     error_at((((Token *)(tokens->data[pos]))->input),
              "仮引数の開きカッコがありません");
-  if (!consume(')'))
-    error_at((((Token *)(tokens->data[pos]))->input),
-             "仮引数の閉じカッコがありません");
+
+  if (!consume(')')) {
+    char *var_name = ((Token *)tokens->data[pos++])->name;
+    vec_push(node->args, (void *)new_node_ident(var_name));
+
+    if (map_get(var_map, var_name) == NULL) {
+      map_put(var_map, var_name, (void *)var_count);
+      var_count++;
+    }
+
+    while (consume(',')) {
+      char *var_name = ((Token *)tokens->data[pos++])->name;
+      vec_push(node->args, (void *)new_node_ident(var_name));
+
+      if (map_get(var_map, var_name) == NULL) {
+        map_put(var_map, var_name, (void *)var_count);
+        var_count++;
+      }
+    }
+
+    if (!consume(')'))
+      error_at((((Token *)(tokens->data[pos]))->input),
+               "仮引数の閉じカッコがありません");
+  }
 
   // ブロック
   if (consume('{')) {

@@ -177,6 +177,19 @@ void gen(Node *node) {
     // 変数の領域を確保する
     printf("  sub rsp, %d\n", var_count * 8);
 
+    // レジスタが持つ引数の値を、仮引数を表す変数にストア
+    int argc = node->args->len;
+    char *regs[6] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+    for (int i = 0; (i < argc) && (i < 6); i++) {
+      char *var_name = ((Node *)node->args->data[i])->name;
+      int var_offset = ((int)map_get(var_map, var_name)) * 8;
+      char *reg_name = regs[i];
+
+      printf("  mov rax, rbp\n");
+      printf("  sub rax, %d\n", var_offset);
+      printf("  mov [rax], %s\n", reg_name);
+    }
+
     // コードを生成
     for (int i = 0; i < node->block->len; i++) {
       gen((Node *)node->block->data[i]);
