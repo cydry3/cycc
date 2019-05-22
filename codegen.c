@@ -22,8 +22,10 @@ void gen(Node *node) {
   }
 
   if (node->ty == ND_BLOCK) {
-    for (int i = 0; i < node->block->len; i++)
+    for (int i = 0; i < node->block->len; i++) {
       gen((Node *)node->block->data[i]);
+      printf("  pop rax\n");
+    }
     return;
   }
 
