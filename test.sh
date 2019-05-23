@@ -98,5 +98,8 @@ try -out 9 "def(x) { a = x; bar(a); } main(){ def(9); }"
 try -out 42 "def(x, y) { a = x + y; bar(a); } main(){ def(11, 31); }"
 try -out 21 "def(a,b,c,d,e,f) { x = a + b * c; y = d * e - f; buzz(x, y);} main(){ def(1,2,3,4,5,6); }"
 try -out 7 "def(x, y) { return x + y; } main(){ a = def(3, 4); bar(a);}"
+try -out 5 "fib(n) { if (n==0) return 0; if (n==1) return 1; return fib(n-2) + fib(n-1); } main(){ a = fib(5); bar(a);}"
+try -out 10946 "fib(n) { if (n==0) return 0; if (n==1) return 1; return fib(n-2) + fib(n-1); } main(){ a = fib(21); bar(a);}"
+
 
 echo OK
