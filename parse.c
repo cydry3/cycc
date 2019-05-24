@@ -636,7 +636,7 @@ Node *term() {
 
   else if (((Token *)(tokens->data[pos]))->ty == TK_IDENT) {
     char *var_name = ((Token *)tokens->data[pos])->name;
-    if (map_get(var_map, var_name) == NULL) {
+    if ((map_get(var_map, var_name) == NULL) && !forward('(')) {
       error_at((((Token *)(tokens->data[pos]))->input),
                "定義された変数ではありません");
     }
