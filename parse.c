@@ -308,7 +308,7 @@ Node *funcs[100];
 //
 // 生成規則:
 // program = func*
-// func = ident "(" (ident? (, ident)* )? ")" "{" stmt* "}"
+// func = "int" ident "(" ( "int" ident? (, "int" ident)* )? ")" "{" stmt* "}"
 // stmt = expr ";"
 // 	| "{" stmt* "}"
 // 	| "return" expr ";"
@@ -338,6 +338,11 @@ void program() {
 Node *func() {
   Node *node;
 
+  // 戻り値
+  if (!consume(TK_INT))
+    error_at((((Token *)(tokens->data[pos]))->input),
+             "戻り値のintキーワードがありません");
+
   // 関数名
   if (((Token *)(tokens->data[pos]))->ty == TK_IDENT) {
     char *func_label = ((Token *)tokens->data[pos++])->name;
@@ -355,6 +360,10 @@ Node *func() {
              "仮引数の開きカッコがありません");
 
   if (!consume(')')) {
+    if (!consume(TK_INT))
+      error_at((((Token *)(tokens->data[pos]))->input),
+               "仮引数のintキーワードがありません");
+
     char *var_name = ((Token *)tokens->data[pos++])->name;
     vec_push(node->args, (void *)new_node_ident(var_name));
 
@@ -364,6 +373,10 @@ Node *func() {
     }
 
     while (consume(',')) {
+      if (!consume(TK_INT))
+        error_at((((Token *)(tokens->data[pos]))->input),
+                 "仮引数のintキーワードがありません");
+
       char *var_name = ((Token *)tokens->data[pos++])->name;
       vec_push(node->args, (void *)new_node_ident(var_name));
 
