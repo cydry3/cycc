@@ -138,6 +138,17 @@ void tokenize(char *user_input) {
       continue;
     }
 
+    // int キーワード
+    if (strncmp(p, "int", 3) == 0 && !is_alnum(p[3])) {
+      Token *token = new_token();
+      token->ty = TK_INT;
+      token->input = p;
+      vec_push(tokens, token);
+      i++;
+      p += 3;
+      continue;
+    }
+
     // 比較演算子
     if (strncmp(p, "==", 2) == 0) {
       Token *token = new_token();
@@ -304,6 +315,7 @@ Node *funcs[100];
 // 	| "if" "(" expr ")" stmt ("else" stmt)?
 // 	| "while" "(" expr ")" stmt
 // 	| "for" "(" expr? ";" expr? ":"  expr? ")" stmt
+// 	| "int" ident ";"
 // expr = assign
 // assign = equiality ("=" assign)?
 // equiality = relational ("==" relational | "!=" relational)*
@@ -465,6 +477,23 @@ Node *stmt() {
     return node;
   }
 
+  // int キーワードによる変数定義
+  if (consume(TK_INT)) {
+    // identの部分
+    node = malloc(sizeof(Node));
+    node->ty = ND_IDENT;
+
+    char *var_name = ((Token *)tokens->data[pos++])->name;
+    node->name = var_name;
+    map_put(var_map, var_name, (void *)var_count);
+    var_count++;
+
+    if (!consume(';'))
+      error_at((((Token *)(tokens->data[pos]))->input), "';'がありません");
+
+    return node;
+  }
+
   if (consume('{')) {
     node = malloc(sizeof(Node));
     node->ty = ND_BLOCK;
@@ -593,13 +622,13 @@ Node *term() {
     return new_node_num(((Token *)tokens->data[pos++])->val);
 
   else if (((Token *)(tokens->data[pos]))->ty == TK_IDENT) {
-    char *var_name = ((Token *)tokens->data[pos++])->name;
-    Node *node = new_node_ident(var_name);
-
+    char *var_name = ((Token *)tokens->data[pos])->name;
     if (map_get(var_map, var_name) == NULL) {
-      map_put(var_map, var_name, (void *)var_count);
-      var_count++;
+      error_at((((Token *)(tokens->data[pos]))->input),
+               "定義された変数ではありません");
     }
+    pos++;
+    Node *node = new_node_ident(var_name);
 
     // 関数であるか判定
     if (consume('(')) {

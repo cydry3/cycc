@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
   // 変数のマップを初期化する
   var_map = new_map();
   // 変数の個数カウンタを初期化する
-  var_count = 0;
+  var_count = 1;
 
   // ユーザの入力
   user_input = argv[1];
