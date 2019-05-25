@@ -8,7 +8,7 @@ void gen_lval(Node *node) {
   if (node->ty != ND_IDENT)
     error("代入の左辺値が変数ではありません");
 
-  int offset = ((int)map_get(var_map, node->name)) * 8;
+  int offset = ((Type *)map_get(var_map, node->name))->count * 8;
   printf("  mov rax, rbp\n");
   printf("  sub rax, %d\n", offset);
   printf("  push rax\n");
@@ -182,7 +182,7 @@ void gen(Node *node) {
     char *regs[6] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
     for (int i = 0; (i < argc) && (i < 6); i++) {
       char *var_name = ((Node *)node->args->data[i])->name;
-      int var_offset = ((int)map_get(var_map, var_name)) * 8;
+      int var_offset = ((Type *)map_get(var_map, var_name))->count * 8;
       char *reg_name = regs[i];
 
       printf("  mov rax, rbp\n");

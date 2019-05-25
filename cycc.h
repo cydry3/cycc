@@ -42,6 +42,13 @@ typedef struct {
   Vector *vals;
 } Map;
 
+// 変数の型
+typedef struct {
+  enum { INT, PTR } ty;
+  struct Type *ptrof;
+  int count;
+} Type;
+
 // 抽象構文木のノードの型を定義
 enum {
   ND_NUM = 256, // 整数のノードの型

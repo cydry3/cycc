@@ -368,8 +368,11 @@ Node *func() {
     vec_push(node->args, (void *)new_node_ident(var_name));
 
     if (map_get(var_map, var_name) == NULL) {
-      map_put(var_map, var_name, (void *)var_count);
-      var_count++;
+      Type *var = malloc(sizeof(Type));
+      var->ty = INT;
+      var->ptrof = NULL;
+      var->count = var_count++;
+      map_put(var_map, var_name, (void *)var);
     }
 
     while (consume(',')) {
@@ -381,8 +384,11 @@ Node *func() {
       vec_push(node->args, (void *)new_node_ident(var_name));
 
       if (map_get(var_map, var_name) == NULL) {
-        map_put(var_map, var_name, (void *)var_count);
-        var_count++;
+        Type *var = malloc(sizeof(Type));
+        var->ty = INT;
+        var->ptrof = NULL;
+        var->count = var_count++;
+        map_put(var_map, var_name, (void *)var);
       }
     }
 
@@ -498,8 +504,11 @@ Node *stmt() {
 
     char *var_name = ((Token *)tokens->data[pos++])->name;
     node->name = var_name;
-    map_put(var_map, var_name, (void *)var_count);
-    var_count++;
+    Type *var = malloc(sizeof(Type));
+    var->ty = INT;
+    var->ptrof = NULL;
+    var->count = var_count++;
+    map_put(var_map, var_name, (void *)var);
 
     if (!consume(';'))
       error_at((((Token *)(tokens->data[pos]))->input), "';'がありません");
