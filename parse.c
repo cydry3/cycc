@@ -195,7 +195,7 @@ void tokenize(char *user_input) {
     }
 
     if (*p == '+' || *p == '-' || *p == '*' || *p == '(' || *p == ')' ||
-        *p == '/' || *p == '=' || *p == ',') {
+        *p == '/' || *p == '=' || *p == ',' || *p == '&') {
       Token *token = new_token();
       token->ty = *p;
       token->input = p;
@@ -261,6 +261,7 @@ Node *add();
 Node *mul();
 Node *unary();
 Node *term();
+Node *ident();
 
 Node *new_node(int ty, Node *lhs, Node *rhs) {
   Node *node = malloc(sizeof(Node));
@@ -315,7 +316,7 @@ Node *funcs[100];
 // 	| "if" "(" expr ")" stmt ("else" stmt)?
 // 	| "while" "(" expr ")" stmt
 // 	| "for" "(" expr? ";" expr? ":"  expr? ")" stmt
-// 	| "int" ident ";"
+// 	| "int" ( "*" )? ident ";"
 // expr = assign
 // assign = equiality ("=" assign)?
 // equiality = relational ("==" relational | "!=" relational)*
@@ -323,6 +324,7 @@ Node *funcs[100];
 // add = mul ("+" mul | "-" mul)*
 // mul  = unary ("*" unary | "/" unary)*
 // unary = ("+" | "-")? term
+// 	 | ("*" | "&")? ident
 // term = num
 //	| ident ("(" expr? (, expr)* ")")?
 //	| "(" expr ")"
@@ -498,6 +500,11 @@ Node *stmt() {
 
   // int キーワードによる変数定義
   if (consume(TK_INT)) {
+    // ポインタの部分
+    int is_ptr = 0;
+    if (consume('*'))
+      is_ptr = 1;
+
     // identの部分
     node = malloc(sizeof(Node));
     node->ty = ND_IDENT;
@@ -505,9 +512,18 @@ Node *stmt() {
     char *var_name = ((Token *)tokens->data[pos++])->name;
     node->name = var_name;
     Type *var = malloc(sizeof(Type));
-    var->ty = INT;
-    var->ptrof = NULL;
-    var->count = var_count++;
+    if (is_ptr) {
+      var->ty = PTR;
+      var->count = var_count++;
+      Type *tmp = malloc(sizeof(Type));
+      tmp->ty = INT;
+      tmp->ptrof = NULL;
+      var->ptrof = tmp;
+    } else {
+      var->ty = INT;
+      var->ptrof = NULL;
+      var->count = var_count++;
+    }
     map_put(var_map, var_name, (void *)var);
 
     if (!consume(';'))
@@ -620,6 +636,10 @@ Node *unary() {
     return term();
   if (consume('-'))
     return new_node('-', new_node_num(0), term());
+  if (consume('*'))
+    return new_node(ND_DEREF, NULL, ident());
+  if (consume('&'))
+    return new_node(ND_ADDRESS, NULL, ident());
   return term();
 }
 
@@ -644,13 +664,7 @@ Node *term() {
     return new_node_num(((Token *)tokens->data[pos++])->val);
 
   else if (((Token *)(tokens->data[pos]))->ty == TK_IDENT) {
-    char *var_name = ((Token *)tokens->data[pos])->name;
-    if ((map_get(var_map, var_name) == NULL) && !forward('(')) {
-      error_at((((Token *)(tokens->data[pos]))->input),
-               "定義された変数ではありません");
-    }
-    pos++;
-    Node *node = new_node_ident(var_name);
+    Node *node = ident();
 
     // 関数であるか判定
     if (consume('(')) {
@@ -675,4 +689,17 @@ Node *term() {
 
   error_at(((Token *)(tokens->data[pos]))->input,
            "数値でも開きカッコでもないトークンです");
+}
+
+Node *ident() {
+  if (!(((Token *)(tokens->data[pos]))->ty == TK_IDENT))
+    error_at(((Token *)(tokens->data[pos]))->input, "識別子がありません");
+  char *var_name = ((Token *)tokens->data[pos])->name;
+  if ((map_get(var_map, var_name) == NULL) && !forward('(')) {
+    error_at((((Token *)(tokens->data[pos]))->input),
+             "定義された変数ではありません");
+  }
+  pos++;
+  Node *node = new_node_ident(var_name);
+  return node;
 }

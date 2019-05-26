@@ -64,6 +64,8 @@ enum {
   ND_BLOCK,     // ブロック（複文)の型
   ND_FUNC,      // 関数呼び出しの型
   ND_DEF_FUNC,  // 関数定義の型
+  ND_DEREF,     // デリファレンス演算子'*'の型
+  ND_ADDRESS,   // アドレス演算子'&'の型
 };
 
 typedef struct Node {

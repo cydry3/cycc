@@ -5,6 +5,11 @@ int jmp_label_count;
 
 // 変数を左辺値として評価する
 void gen_lval(Node *node) {
+  if (node->ty == ND_DEREF) {
+    gen(node->rhs);
+    return;
+  }
+
   if (node->ty != ND_IDENT)
     error("代入の左辺値が変数ではありません");
 
@@ -94,6 +99,19 @@ void gen(Node *node) {
     gen(node->rhs->lhs);
     printf("  jmp .Lbegin%03d\n", begin_label);
     printf(".Lend%03d:\n", end_label);
+    return;
+  }
+
+  if (node->ty == ND_DEREF) {
+    gen(node->rhs);
+    printf("  pop rax\n");
+    printf("  mov rax, [rax]\n");
+    printf("  push rax\n");
+    return;
+  }
+
+  if (node->ty == ND_ADDRESS) {
+    gen_lval(node->rhs);
     return;
   }
 

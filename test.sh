@@ -100,6 +100,12 @@ try -out 21 "int def(int a, int b, int c, int d, int e, int f) { int x; int y; x
 try -out 7 "int def(int x, int y) { return x + y; } int main(){ int a; a = def(3, 4); bar(a);}"
 try -out 5 "int fib(int n) { if (n==0) return 0; if (n==1) return 1; return fib(n-2) + fib(n-1); } int main(){ int a; a = fib(5); bar(a);}"
 try -out 10946 "int fib(int n) { if (n==0) return 0; if (n==1) return 1; return fib(n-2) + fib(n-1); } int main(){ int a; a = fib(21); bar(a);}"
+try -out 7 "int main(){ int *a; int b; b = 5; a = &b; *a = 7; bar(b);}"
+try -out 0 "int main(){ int *a; int b; b = 5; a = &b; *a = 0; bar(b);}"
+try -out 5 "int main(){ int *a; int b; int c; b = 5; a = &b; c = *a; bar(c);}"
+try -out 0 "int main(){ int *a; int b; int c; b = 5; a = &b; *a = 0; c = *a; bar(c);}"
+try -out 3 "int main() { int x; int *y; x = 3; y = &x; bar(*y);}"
+try 3 "int main() { int x; int *y; x = 3; y = &x; return *y;}"
 
 
 echo OK
