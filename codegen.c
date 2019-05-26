@@ -7,6 +7,14 @@ int jmp_label_count;
 void gen_lval(Node *node) {
   if (node->ty == ND_DEREF) {
     gen(node->rhs);
+
+    Type *t = ((Type *)map_get(var_map, node->rhs->name));
+    Type *p = t->ptrof;
+    for (p = p->ptrof; p != NULL; p = p->ptrof) {
+      printf("  pop rax\n");
+      printf("  mov rax, [rax]\n");
+      printf("  push rax\n");
+    }
     return;
   }
 
@@ -107,6 +115,14 @@ void gen(Node *node) {
     printf("  pop rax\n");
     printf("  mov rax, [rax]\n");
     printf("  push rax\n");
+
+    Type *t = ((Type *)map_get(var_map, node->rhs->name));
+    Type *p = t->ptrof;
+    for (p = p->ptrof; p != NULL; p = p->ptrof) {
+      printf("  pop rax\n");
+      printf("  mov rax, [rax]\n");
+      printf("  push rax\n");
+    }
     return;
   }
 

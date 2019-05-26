@@ -302,6 +302,17 @@ int forward(int ty) {
   return 1;
 }
 
+// ポインタの為の関数
+// nの数だけリファレンスするポインタを返す
+Type *pointer(Type *t, int n) {
+  if (n <= 0)
+    return t;
+  Type *tmp = malloc(sizeof(Type));
+  tmp->ty = PTR;
+  tmp->ptrof = pointer(t, n - 1);
+  return tmp;
+}
+
 // パースされた複数の関数定義を100個まで格納
 Node *funcs[100];
 
@@ -501,9 +512,9 @@ Node *stmt() {
   // int キーワードによる変数定義
   if (consume(TK_INT)) {
     // ポインタの部分
-    int is_ptr = 0;
-    if (consume('*'))
-      is_ptr = 1;
+    int ptr_count = 0;
+    while (consume('*'))
+      ptr_count++;
 
     // identの部分
     node = malloc(sizeof(Node));
@@ -511,19 +522,14 @@ Node *stmt() {
 
     char *var_name = ((Token *)tokens->data[pos++])->name;
     node->name = var_name;
-    Type *var = malloc(sizeof(Type));
-    if (is_ptr) {
-      var->ty = PTR;
-      var->count = var_count++;
-      Type *tmp = malloc(sizeof(Type));
-      tmp->ty = INT;
-      tmp->ptrof = NULL;
-      var->ptrof = tmp;
-    } else {
-      var->ty = INT;
-      var->ptrof = NULL;
-      var->count = var_count++;
-    }
+
+    Type *tail = malloc(sizeof(Type));
+    tail->ty = INT;
+    tail->ptrof = NULL;
+
+    Type *var = pointer(tail, ptr_count);
+    var->count = var_count++;
+
     map_put(var_map, var_name, (void *)var);
 
     if (!consume(';'))
@@ -636,8 +642,12 @@ Node *unary() {
     return term();
   if (consume('-'))
     return new_node('-', new_node_num(0), term());
-  if (consume('*'))
+
+  if (consume('*')) {
+    while (consume('*'))
+      ;
     return new_node(ND_DEREF, NULL, ident());
+  }
   if (consume('&'))
     return new_node(ND_ADDRESS, NULL, ident());
   return term();

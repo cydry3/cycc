@@ -106,6 +106,11 @@ try -out 5 "int main(){ int *a; int b; int c; b = 5; a = &b; c = *a; bar(c);}"
 try -out 0 "int main(){ int *a; int b; int c; b = 5; a = &b; *a = 0; c = *a; bar(c);}"
 try -out 3 "int main() { int x; int *y; x = 3; y = &x; bar(*y);}"
 try 3 "int main() { int x; int *y; x = 3; y = &x; return *y;}"
+try 3 "int main() { int **x; int *y; int z; x = &y; y = &z; **x = 3; return z;}"
+try 5 "int main() { int **x; int *y; int z; x = &y; y = &z; z = 5; return **x;}"
+try 7 "int main() { int ***x; int **y; int *z; int a; x = &y; y = &z;  z = &a; ***x = 7; return a;}"
+try 11 "int main() { int ***x; int **y; int *z; int a; x = &y; y = &z;  z = &a; a = 11; return ***x;}"
+try 13 "int main() { int ***x; int **y; int *z; int a; x = &y; y = &z;  z = &a; ***x = 11; **y = 13; return a;}"
 
 
 echo OK
