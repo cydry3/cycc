@@ -8,6 +8,7 @@ void gen_lval(Node *node) {
   if (node->ty == ND_DEREF) {
     gen(node->rhs);
 
+    // ２つ以上のデリファレンス'*'
     Type *t = ((Type *)map_get(var_map, node->rhs->name));
     Type *p = t->ptrof;
     for (p = p->ptrof; p != NULL; p = p->ptrof) {
@@ -116,6 +117,7 @@ void gen(Node *node) {
     printf("  mov rax, [rax]\n");
     printf("  push rax\n");
 
+    // ２つ以上のデリファレンス'*'
     Type *t = ((Type *)map_get(var_map, node->rhs->name));
     Type *p = t->ptrof;
     for (p = p->ptrof; p != NULL; p = p->ptrof) {

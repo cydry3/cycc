@@ -516,7 +516,7 @@ Node *stmt() {
     while (consume('*'))
       ptr_count++;
 
-    // identの部分
+    // 識別子の部分
     node = malloc(sizeof(Node));
     node->ty = ND_IDENT;
 
