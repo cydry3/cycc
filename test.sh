@@ -111,6 +111,12 @@ try 5 "int main() { int **x; int *y; int z; x = &y; y = &z; z = 5; return **x;}"
 try 7 "int main() { int ***x; int **y; int *z; int a; x = &y; y = &z;  z = &a; ***x = 7; return a;}"
 try 11 "int main() { int ***x; int **y; int *z; int a; x = &y; y = &z;  z = &a; a = 11; return ***x;}"
 try 13 "int main() { int ***x; int **y; int *z; int a; x = &y; y = &z;  z = &a; ***x = 11; **y = 13; return a;}"
+try -out 1 "int main() { int ***x; int **y; int *z; int a; x = &y; y = &z; z = &a;  is_equal_ptrs(**x, z);}"
+try -out 1 "int main() { int ***x; int **y; int *z; int a; x = &y; y = &z; z = &a;  is_equal_ptrs(*y, z);}"
+try -out 1 "int main() { int ***x; int **y; int *z; int a; x = &y; y = &z; z = &a;  is_equal_ptrs(*y, &a);}"
+try -out 1 "int main() { int ***x; int **y; int *z; int a; x = &y; y = &z; z = &a;  is_equal_ptrs(*x, y);}"
+try -out 0 "int main() { int ***x; int **y; int *z; int a; x = &y; y = &z; z = &a;  is_equal_ptrs(***x, &a);}"
+try -out 1 "int main() { int ***x; int **y; int *z; int a; x = &y; y = &z; z = &a;  is_equal_ptrs(***x, a);}"
 
 
 echo OK

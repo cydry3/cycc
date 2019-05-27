@@ -644,9 +644,12 @@ Node *unary() {
     return new_node('-', new_node_num(0), term());
 
   if (consume('*')) {
+    int derefer_count = 1;
     while (consume('*'))
-      ;
-    return new_node(ND_DEREF, NULL, ident());
+      derefer_count++;
+    Node *node = new_node(ND_DEREF, NULL, ident());
+    node->deref = derefer_count;
+    return node;
   }
   if (consume('&'))
     return new_node(ND_ADDRESS, NULL, ident());

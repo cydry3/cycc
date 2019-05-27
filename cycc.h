@@ -76,6 +76,7 @@ typedef struct Node {
   char *name;       // tyがND_IDENTの場合のみ使う
   Vector *block;    // tyがND_BLOCKの場合のみ使う
   Vector *args;     // tyがND_FUNCの場合のみ使う
+  int deref;        // tyがND_DEREFの場合のみ使う
 } Node;
 
 // 可変長ベクタの為の関数
