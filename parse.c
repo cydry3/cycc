@@ -253,6 +253,7 @@ void tokenize(char *user_input) {
 void program();
 Node *func();
 Node *stmt();
+Node *var_decl();
 Node *expr();
 Node *assign();
 Node *equiality();
@@ -320,14 +321,15 @@ Node *funcs[100];
 //
 // 生成規則:
 // program = func*
-// func = "int" ident "(" ( "int" ident? (, "int" ident)* )? ")" "{" stmt* "}"
+// func = "int" ident "(" ( var_decl? (, var_decl)* )? ")" "{" stmt* "}"
 // stmt = expr ";"
 // 	| "{" stmt* "}"
 // 	| "return" expr ";"
 // 	| "if" "(" expr ")" stmt ("else" stmt)?
 // 	| "while" "(" expr ")" stmt
 // 	| "for" "(" expr? ";" expr? ":"  expr? ")" stmt
-// 	| "int" ( "*" )? ident ";"
+// 	| var_decl ";"
+// var_decl = "int" ( "*" )? ident
 // expr = assign
 // assign = equiality ("=" assign)?
 // equiality = relational ("==" relational | "!=" relational)*
@@ -377,32 +379,14 @@ Node *func() {
       error_at((((Token *)(tokens->data[pos]))->input),
                "仮引数のintキーワードがありません");
 
-    char *var_name = ((Token *)tokens->data[pos++])->name;
-    vec_push(node->args, (void *)new_node_ident(var_name));
-
-    if (map_get(var_map, var_name) == NULL) {
-      Type *var = malloc(sizeof(Type));
-      var->ty = INT;
-      var->ptrof = NULL;
-      var->count = var_count++;
-      map_put(var_map, var_name, (void *)var);
-    }
+    vec_push(node->args, (void *)var_decl());
 
     while (consume(',')) {
       if (!consume(TK_INT))
         error_at((((Token *)(tokens->data[pos]))->input),
                  "仮引数のintキーワードがありません");
 
-      char *var_name = ((Token *)tokens->data[pos++])->name;
-      vec_push(node->args, (void *)new_node_ident(var_name));
-
-      if (map_get(var_map, var_name) == NULL) {
-        Type *var = malloc(sizeof(Type));
-        var->ty = INT;
-        var->ptrof = NULL;
-        var->count = var_count++;
-        map_put(var_map, var_name, (void *)var);
-      }
+      vec_push(node->args, (void *)var_decl());
     }
 
     if (!consume(')'))
@@ -511,30 +495,10 @@ Node *stmt() {
 
   // int キーワードによる変数定義
   if (consume(TK_INT)) {
-    // ポインタの部分
-    int ptr_count = 0;
-    while (consume('*'))
-      ptr_count++;
-
-    // 識別子の部分
-    node = malloc(sizeof(Node));
-    node->ty = ND_IDENT;
-
-    char *var_name = ((Token *)tokens->data[pos++])->name;
-    node->name = var_name;
-
-    Type *tail = malloc(sizeof(Type));
-    tail->ty = INT;
-    tail->ptrof = NULL;
-
-    Type *var = pointer(tail, ptr_count);
-    var->count = var_count++;
-
-    map_put(var_map, var_name, (void *)var);
+    node = var_decl();
 
     if (!consume(';'))
       error_at((((Token *)(tokens->data[pos]))->input), "';'がありません");
-
     return node;
   }
 
@@ -565,6 +529,32 @@ Node *stmt() {
   if (!consume(';'))
     error_at((((Token *)(tokens->data[pos]))->input),
              "';'ではないトークンです");
+  return node;
+}
+
+Node *var_decl() {
+  Node *node;
+  // ポインタの部分
+  int ptr_count = 0;
+  while (consume('*'))
+    ptr_count++;
+
+  // 識別子の部分
+  node = malloc(sizeof(Node));
+  node->ty = ND_IDENT;
+
+  char *var_name = ((Token *)tokens->data[pos++])->name;
+  node->name = var_name;
+
+  Type *tail = malloc(sizeof(Type));
+  tail->ty = INT;
+  tail->ptrof = NULL;
+
+  Type *var = pointer(tail, ptr_count);
+  var->count = var_count++;
+
+  map_put(var_map, var_name, (void *)var);
+
   return node;
 }
 

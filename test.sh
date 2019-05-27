@@ -117,6 +117,9 @@ try -out 1 "int main() { int ***x; int **y; int *z; int a; x = &y; y = &z; z = &
 try -out 1 "int main() { int ***x; int **y; int *z; int a; x = &y; y = &z; z = &a;  is_equal_ptrs(*x, y);}"
 try -out 0 "int main() { int ***x; int **y; int *z; int a; x = &y; y = &z; z = &a;  is_equal_ptrs(***x, &a);}"
 try -out 1 "int main() { int ***x; int **y; int *z; int a; x = &y; y = &z; z = &a;  is_equal_ptrs(***x, a);}"
+try -out 3  "int def(int *a) { bar(*a); } int main() { int x; int *y; x = 3; y = &x; def(y);}"
+try -out 7  "int def(int *x, int *y) { int ret; ret = *x + *y; bar(ret); } int main() { int *a; int *b; int c; int d; \
+    a = &c; b = &d; *a = 3; *b = 4; def(a, b);}"
 
 
 echo OK
