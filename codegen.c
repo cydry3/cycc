@@ -258,11 +258,37 @@ void gen(Node *node) {
   printf("  pop rdi\n");
   printf("  pop rax\n");
 
+  // ポインタの加算・減算の為のシフト量を計算
+  int is_pointer = 0;
+  int siz = 0;
+  if (node->lhs->name != NULL) {
+    Type *t = (Type *)map_get(var_map, node->lhs->name);
+
+    if ((t != NULL) && (t->ty == PTR)) {
+      is_pointer = 1;
+
+      if (((Type *)(t->ptrof))->ty == PTR) {
+        siz = 3; // 3bits 左シフト量(8bytes)
+      }
+      if (((Type *)(t->ptrof))->ty == INT) {
+        siz = 2; // 2bits 左シフト量(4bytes)
+      }
+    }
+  }
+
   switch (node->ty) {
   case '+':
+    // ポインタの加算の為
+    if (is_pointer)
+      printf("  shl rdi, %d\n", siz);
+
     printf("  add rax, rdi\n");
     break;
   case '-':
+    // ポインタの減算の為
+    if (is_pointer)
+      printf("  shl rdi, %d\n", siz);
+
     printf("  sub rax, rdi\n");
     break;
   case '*':

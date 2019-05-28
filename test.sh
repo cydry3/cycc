@@ -120,6 +120,8 @@ try -out 1 "int main() { int ***x; int **y; int *z; int a; x = &y; y = &z; z = &
 try -out 3  "int def(int *a) { bar(*a); } int main() { int x; int *y; x = 3; y = &x; def(y);}"
 try -out 7  "int def(int *x, int *y) { int ret; ret = *x + *y; bar(ret); } int main() { int *a; int *b; int c; int d; \
     a = &c; b = &d; *a = 3; *b = 4; def(a, b);}"
-
+try -out 1 "int main() { int *p; int *q; alloc4(&p, 1, 2, 4, 8); q = p; bar(*q);}"
+try -out 4 "int main() { int *p; int *q; alloc4(&p, 1, 2, 4, 8); q = p + 2; bar(*q);}"
+try -out 2 "int main() { int *p; int *q; alloc4(&p, 1, 2, 4, 8); q = p + 3; q = q - 2; bar(*q);}"
 
 echo OK
