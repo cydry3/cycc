@@ -45,9 +45,10 @@ typedef struct {
 
 // 変数の型
 typedef struct {
-  enum { INT, PTR } ty;
+  enum { INT, PTR, ARRAY } ty;
   struct Type *ptrof;
   int offset;
+  size_t array_size;
 } Type;
 
 // 抽象構文木のノードの型を定義

@@ -206,7 +206,8 @@ void tokenize(char *user_input) {
     }
 
     if (*p == '+' || *p == '-' || *p == '*' || *p == '(' || *p == ')' ||
-        *p == '/' || *p == '=' || *p == ',' || *p == '&') {
+        *p == '/' || *p == '=' || *p == ',' || *p == '&' || *p == '[' ||
+        *p == ']') {
       Token *token = new_token();
       token->ty = *p;
       token->input = p;
@@ -325,6 +326,34 @@ Type *pointer(Type *t, int n) {
   return tmp;
 }
 
+// 配列の為の関数
+// 配列を読み、変数の型を返す
+Type *array(Type *t) {
+  if (!consume('[')) {
+    return t;
+  }
+
+  int siz = ((Token *)tokens->data[pos++])->val;
+  Type *tmp = malloc(sizeof(Type));
+  tmp->ty = ARRAY;
+  tmp->array_size = siz;
+  if (!consume(']'))
+    error_at((((Token *)(tokens->data[pos]))->input),
+             "開きカッコに対する閉じカッコがありません");
+
+  tmp->ptrof = array(t);
+  return tmp;
+}
+
+// 配列の為の関数
+// 配列の型の変数を読み、要素数の計を返す
+int array_size_of(Type *t) {
+  if (t->ty != ARRAY)
+    return 1;
+  int siz = t->array_size;
+  return siz * array_size_of(t->ptrof);
+}
+
 // パースされた複数の関数定義を100個まで格納
 Node *funcs[100];
 
@@ -340,7 +369,7 @@ Node *funcs[100];
 // 	| "while" "(" expr ")" stmt
 // 	| "for" "(" expr? ";" expr? ":"  expr? ")" stmt
 // 	| var_decl ";"
-// var_decl = "int" ( "*" )? ident
+// var_decl = "int" ( "*" )? ident ( ( "[" num "]" )* )?
 // expr = assign
 // assign = equiality ("=" assign)?
 // equiality = relational ("==" relational | "!=" relational)*
@@ -563,7 +592,32 @@ Node *var_decl() {
   tail->ptrof = NULL;
 
   Type *var = pointer(tail, ptr_count);
-  var->offset = 8 * var_count++;
+  var->offset = 8 * var_count;
+
+  int base;
+  switch (tail->ty) {
+  case PTR:
+    base = 8;
+    break;
+  case INT:
+    base = 4;
+    break;
+  }
+
+  int siz = 1;
+
+  // 配列の部分
+  var = array(var);
+  if (var->ty == ARRAY) {
+    siz *= array_size_of(var);
+  }
+
+  // サイズを1byte単位から8bytes単位に換算
+  siz = base * siz;
+  int add_siz = siz / 8;
+  if ((siz % 8) > 0)
+    add_siz++;
+  var_count += add_siz;
 
   map_put(var_map, var_name, (void *)var);
 

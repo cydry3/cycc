@@ -151,7 +151,6 @@ try 8 "int main() { int *x; sizeof((x + 3) + 4); }"
 try 4 "int main() { int a; sizeof(a = 1); }"
 try 4 "int main() { int a; int *b; b = &a; sizeof(*b = 1); }"
 try 8 "int main() { int *b; sizeof(b = 1); }"
-
-
+try -out OK "int main() { int a[10]; foo();}"
 
 echo OK
