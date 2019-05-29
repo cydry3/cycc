@@ -47,7 +47,7 @@ typedef struct {
 typedef struct {
   enum { INT, PTR } ty;
   struct Type *ptrof;
-  int count;
+  int offset;
 } Type;
 
 // 抽象構文木のノードの型を定義

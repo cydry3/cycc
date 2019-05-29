@@ -563,7 +563,7 @@ Node *var_decl() {
   tail->ptrof = NULL;
 
   Type *var = pointer(tail, ptr_count);
-  var->count = var_count++;
+  var->offset = 8 * var_count++;
 
   map_put(var_map, var_name, (void *)var);
 
