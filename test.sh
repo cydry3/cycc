@@ -152,5 +152,11 @@ try 4 "int main() { int a; sizeof(a = 1); }"
 try 4 "int main() { int a; int *b; b = &a; sizeof(*b = 1); }"
 try 8 "int main() { int *b; sizeof(b = 1); }"
 try -out OK "int main() { int a[10]; foo();}"
+try -out 3 "int main() { int a[2]; *a = 3; int *p; p = a; bar(*p);}"
+try -out 3 "int main() { int a[2]; *a = 3; int *p; int b; b = 4; p = a; bar(*p);}"
+try -out 2 "int main() { int a[2]; *a = 3; int *p; a = a + 1; *a = 2; p = a; bar(*p);}"
+try -out 3 "int main() { int a[2]; *a = 3; a = a + 1; *a = 2; a = a - 1; bar(*a);}"
+try 3 "int main() { int a[2]; *a = 3; a = a + 1; *a = 2; a = a - 1; return *a;}"
+try 3 "int main() { int a[2]; *a = 1; *(a + 1) = 2; int *p; p = a; return *p + *(p + 1);}"
 
 echo OK

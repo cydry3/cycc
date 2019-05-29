@@ -378,7 +378,8 @@ Node *funcs[100];
 // mul  = unary ("*" unary | "/" unary)*
 // unary = "sizeof" unary
 // 	 | ("+" | "-")? term
-// 	 | ("*" | "&")? ident
+// 	 | ( ("*")* )? ( ident | "(" expr ")" )
+// 	 | ("&")? ident
 // term = num
 //	| ident ("(" expr? (, expr)* ")")?
 //	| "(" expr ")"
@@ -618,6 +619,8 @@ Node *var_decl() {
   if ((siz % 8) > 0)
     add_siz++;
   var_count += add_siz;
+  if (var->ty == ARRAY)
+    var->offset = var_count * 8;
 
   map_put(var_map, var_name, (void *)var);
 
@@ -750,10 +753,19 @@ Node *unary() {
     return new_node('-', new_node_num(0), term());
 
   if (consume('*')) {
+    Node *node;
     int derefer_count = 1;
     while (consume('*'))
       derefer_count++;
-    Node *node = new_node(ND_DEREF, NULL, ident());
+    if (consume('(')) {
+      node = expr();
+      if (!consume(')'))
+        error_at((((Token *)(tokens->data[pos]))->input),
+                 "閉じカッコがありません");
+    } else {
+      node = ident();
+    }
+    node = new_node(ND_DEREF, NULL, node);
     node->deref = derefer_count;
     return node;
   }
@@ -820,6 +832,14 @@ Node *ident() {
              "定義された変数ではありません");
   }
   pos++;
+  // 配列型の場合は、ポインタ型にすべて置き換えてしまう
+  Type *t = (Type *)map_get(var_map, var_name);
+  if (t != NULL) {
+    if (t->ty == ARRAY) {
+      t->ty = PTR;
+      map_put(var_map, var_name, (void *)t);
+    }
+  }
   Node *node = new_node_ident(var_name);
   return node;
 }
