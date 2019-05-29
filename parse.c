@@ -194,6 +194,17 @@ void tokenize(char *user_input) {
       continue;
     }
 
+    // sizeof演算子
+    if (strncmp(p, "sizeof", 6) == 0 && !is_alnum(p[6])) {
+      Token *token = new_token();
+      token->ty = TK_SIZEOF;
+      token->input = p;
+      vec_push(tokens, token);
+      i++;
+      p += 6;
+      continue;
+    }
+
     if (*p == '+' || *p == '-' || *p == '*' || *p == '(' || *p == ')' ||
         *p == '/' || *p == '=' || *p == ',' || *p == '&') {
       Token *token = new_token();
@@ -336,7 +347,8 @@ Node *funcs[100];
 // relational = add ("<" add | "<=" add | ">=" add | ">" add)*
 // add = mul ("+" mul | "-" mul)*
 // mul  = unary ("*" unary | "/" unary)*
-// unary = ("+" | "-")? term
+// unary = "sizeof" unary
+// 	 | ("+" | "-")? term
 // 	 | ("*" | "&")? ident
 // term = num
 //	| ident ("(" expr? (, expr)* ")")?
@@ -627,7 +639,57 @@ Node *mul() {
   }
 }
 
+Node *sizeof_op(Node *node) {
+  switch (node->ty) {
+  case '=': // assign
+    node = sizeof_op(node->lhs);
+    break;
+  case ND_EQ: // equiality
+  case ND_NE:
+  case '<': // relational
+  case ND_LE:
+    node = new_node_num(4);
+    break;
+  case '+': // add
+  case '-':
+  case '*': // mul
+  case '/':
+    node = sizeof_op(node->lhs);
+    break;
+  case ND_ADDRESS: // unary
+    node = new_node_num(8);
+    break;
+  case ND_DEREF: {
+    Type *t = map_get(var_map, node->rhs->name);
+    if (((Type *)t->ptrof)->ty == PTR)
+      node = new_node_num(8);
+    if (((Type *)t->ptrof)->ty == INT)
+      node = new_node_num(4);
+  } break;
+  case ND_NUM: // term
+    node = new_node_num(4);
+    break;
+  case ND_IDENT: {
+    Type *t = map_get(var_map, node->name);
+    if (t->ty == PTR)
+      node = new_node_num(8);
+    if (t->ty == INT)
+      node = new_node_num(4);
+  } break;
+  default:
+    error_at((((Token *)(tokens->data[pos]))->input),
+             "構文木に紐づく型がわかりません");
+  }
+  return node;
+}
+
 Node *unary() {
+  if (consume(TK_SIZEOF)) {
+    Node *node = unary();
+    node = sizeof_op(node);
+    return node;
+  }
+
   if (consume('+'))
     return term();
   if (consume('-'))
@@ -643,6 +705,7 @@ Node *unary() {
   }
   if (consume('&'))
     return new_node(ND_ADDRESS, NULL, ident());
+
   return term();
 }
 

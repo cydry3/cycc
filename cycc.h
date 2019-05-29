@@ -19,6 +19,7 @@ enum {
   TK_WHIL,      // while文を表すトークン
   TK_FOR,       // for文を表すトークン
   TK_INT,       // intキーワードを表すトークン
+  TK_SIZEOF,    // sizeofキーワードを表すトークン
 };
 
 // トークンの型
