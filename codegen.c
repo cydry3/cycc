@@ -20,9 +20,28 @@ void gen_lval(Node *node) {
   if (node->ty != ND_IDENT)
     error("代入の左辺値が変数ではありません");
 
-  int offset = ((Type *)map_get(var_map, node->name))->offset;
+  char *var_name = node->name;
+
+  // 配列の為のポインタ型への変換
+  Type *t = map_get(var_map, var_name);
+  int var_offset;
+  if (t->ty == PTR) {
+    int ptr_offset = t->offset;
+    t = t->ptrof;
+    if (t->ty == ARRAY) {
+      printf("  lea rax, [rbp-%d]\n", t->offset);
+      printf("  push rax\n");
+      printf("  lea rax, [rbp-%d]\n", ptr_offset);
+      printf("  pop rdi\n");
+      printf("  mov [rax], rdi\n");
+    }
+    var_offset = ptr_offset;
+  } else {
+    var_offset = t->offset;
+  }
+
   printf("  mov rax, rbp\n");
-  printf("  sub rax, %d\n", offset);
+  printf("  sub rax, %d\n", var_offset);
   printf("  push rax\n");
 }
 
@@ -214,7 +233,24 @@ void gen(Node *node) {
     char *regs[6] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
     for (int i = 0; (i < argc) && (i < 6); i++) {
       char *var_name = ((Node *)node->args->data[i])->name;
-      int var_offset = ((Type *)map_get(var_map, var_name))->offset;
+
+      // 配列の為のポインタ型への変換
+      Type *t = map_get(var_map, var_name);
+      int var_offset;
+      if (t->ty == PTR) {
+        int ptr_offset = t->offset;
+        t = t->ptrof;
+        if (t->ty == ARRAY) {
+          printf("  lea rax, [rbp-%d]\n", t->offset);
+          printf("  push rax\n");
+          printf("  lea rax, [rbp-%d]\n", ptr_offset);
+          printf("  pop rdi\n");
+          printf("  mov [rax], rdi\n");
+        }
+        var_offset = ptr_offset;
+      } else {
+        var_offset = t->offset;
+      }
       char *reg_name = regs[i];
 
       printf("  mov rax, rbp\n");
@@ -260,6 +296,9 @@ void gen(Node *node) {
 
     if ((t != NULL) && (t->ty == PTR)) {
       is_pointer = 1;
+      if (((Type *)(t->ptrof))->ty == ARRAY) {
+        t = t->ptrof;
+      }
 
       if (((Type *)(t->ptrof))->ty == PTR) {
         siz = 3; // 3bits 左シフト量(8bytes)

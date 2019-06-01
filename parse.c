@@ -618,7 +618,7 @@ Node *var_decl() {
   tail->ptrof = NULL;
 
   Type *var = pointer(tail, ptr_count);
-  var->offset = 8 * var_count;
+  var->offset = 8 * ++var_count;
 
   int base;
   switch (tail->ty) {
@@ -644,8 +644,11 @@ Node *var_decl() {
   if ((siz % 8) > 0)
     add_siz++;
   var_count += add_siz;
-  if (var->ty == ARRAY)
+  if (var->ty == ARRAY) {
     var->offset = var_count * 8;
+    var = pointer(var, 1);
+    var->offset = ++var_count * 8;
+  }
 
   map_put(var_map, var_name, (void *)var);
 
@@ -792,7 +795,6 @@ Node *unary() {
     }
     node = new_node(ND_DEREF, NULL, node);
     node->deref = derefer_count;
-    array_as_pointer(node);
     return node;
   }
   if (consume('&'))
