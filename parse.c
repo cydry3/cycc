@@ -406,7 +406,7 @@ Node *funcs[100];
 // 	 | ( ("*")* )? ( ident | "(" expr ")" )
 // 	 | ("&")? ident
 // term = num
-//	| ident ("(" expr? (, expr)* ")")?
+//	| ident ("(" expr? (, expr)* ")")? ( "[" num "]" )?
 //	| "(" expr ")"
 //
 void program() {
