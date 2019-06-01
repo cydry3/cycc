@@ -844,6 +844,22 @@ Node *term() {
                  "開きカッコに対する閉じカッコがありません");
     }
 
+    // 配列であるか判定
+    if (consume('[')) {
+      Node *index;
+      if (((Token *)(tokens->data[pos]))->ty == TK_NUM)
+        index = new_node_num(((Token *)tokens->data[pos++])->val);
+      else
+        error_at((((Token *)(tokens->data[pos]))->input),
+                 "添字[数]がありません");
+
+      if (!consume(']'))
+        error_at((((Token *)(tokens->data[pos]))->input),
+                 "開きカッコに対する閉じカッコがありません");
+
+      node = new_node(ND_DEREF, NULL, new_node('+', node, index));
+    }
+
     return node;
   }
 

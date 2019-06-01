@@ -160,5 +160,7 @@ try -out 7 "int main() { int a[10]; *(a + 5) = 7; bar(*(a + 5));}"
 try -out 1 "int main() { int a[21]; *a = 1; *(a + 1) = 2; int *p; p = a; bar(*p);}"
 try 3 "int main() { int a[10]; *a = 1; *(a + 1) = 2; int *p; p = a; return *p + *(p + 1);}"
 try 5 "int main() { int a[100]; *a = 2; *(a + 11) = 3; int *p; p = a; return *p + *(p + 11);}"
+try 1 "int main() { int a[2]; a[0] = 1; return a[0];}"
+try 5 "int main() { int a[100]; a[0] = 2; a[11] = 3; return a[0] + a[11];}"
 
 echo OK
