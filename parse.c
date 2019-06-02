@@ -397,7 +397,7 @@ void array_as_pointer(Node *node) {
   array_as_pointer(node->rhs);
 }
 
-// パースされた複数の関数定義を100個まで格納
+// パースされた複数のトップレベルの定義を100個まで格納
 Node *code[100];
 
 // パーサ
