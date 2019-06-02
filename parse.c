@@ -449,17 +449,13 @@ Node *decl() {
     if (forward('(')) {
       pos++;
       node = read_decl_func_tail(label);
+
     } else if ((forward('[')) || (forward(';'))) {
       pos++;
-      ty = read_decl_var_tail(ty);
-      node = malloc(sizeof(Node));
-      node->name = label;
-      node->ty = ND_DEF_VAR;
-      map_put(gl_var_map, label, (void *)ty);
+      node = read_decl_var_tail(ty, label);
     }
-  } else {
+  } else
     error_at(((Token *)(tokens->data[pos]))->input, "識別子がありません");
-  }
 
   return node;
 }
@@ -530,7 +526,7 @@ Node *read_decl_func_tail(char *label) {
   return node;
 }
 
-Node *read_decl_var_tail(Type *ty) {
+Node *read_decl_var_tail(Type *ty, char *label) {
   // 配列の部分
   ty = array(ty);
   if (ty->ty == ARRAY) {
@@ -539,7 +535,11 @@ Node *read_decl_var_tail(Type *ty) {
   if (!consume(';'))
     error_at((((Token *)(tokens->data[pos]))->input),
              "';'ではないトークンです");
-  return ty;
+  Node *node = malloc(sizeof(Node));
+  node->name = label;
+  node->ty = ND_DEF_VAR;
+  map_put(gl_var_map, label, (void *)ty);
+  return node;
 }
 
 Node *stmt() {
