@@ -162,5 +162,9 @@ try 3 "int main() { int a[10]; *a = 1; *(a + 1) = 2; int *p; p = a; return *p + 
 try 5 "int main() { int a[100]; *a = 2; *(a + 11) = 3; int *p; p = a; return *p + *(p + 11);}"
 try 1 "int main() { int a[2]; a[0] = 1; return a[0];}"
 try 5 "int main() { int a[100]; a[0] = 2; a[11] = 3; return a[0] + a[11];}"
+try 0 "int a; int main() { 0; }"
+try 0 "int a; int main() { return a;}"
+try 1 "int a; int main() { a = 1; return a;}"
+try 3 "int foo; int bar; int main() { foo = 1; bar = 2; return foo + bar;}"
 
 echo OK

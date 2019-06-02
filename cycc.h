@@ -68,6 +68,7 @@ enum {
   ND_DEF_FUNC,  // 関数定義の型
   ND_DEREF,     // デリファレンス演算子'*'の型
   ND_ADDRESS,   // アドレス演算子'&'の型
+  ND_DEF_VAR,   // グローバル変数定義の型
 };
 
 typedef struct Node {
@@ -114,8 +115,8 @@ void program();
 // printfと同じ引数を受け取る
 void error(char *fmt, ...);
 
-// パースされた複数の関数定義を100個まで格納
-extern Node *funcs[100];
+// パースされた複数のトップレベルの定義を100個まで格納
+extern Node *code[100];
 
 // 複数文字のローカル変数の為のマップ
 extern Map *var_map;
@@ -128,3 +129,6 @@ extern int jmp_label_count;
 
 // 関数呼び出しの為に、作成した仮の関数
 int foo();
+
+// グローバル変数の為のマップ
+Map *gl_var_map;

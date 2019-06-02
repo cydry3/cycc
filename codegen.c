@@ -1,5 +1,48 @@
 #include "cycc.h"
 
+int find_var_size(Node *node, int *size) {
+  if (node != NULL)
+    return;
+  find_var_size(node->lhs, size);
+  if (node->ty == ND_IDENT) {
+    Type *t = map_get(var_map, node->name);
+    if (t == NULL)
+      t = map_get(gl_var_map, node->name);
+    if (((Type *)t->ptrof)->ty == ARRAY) {
+      for (Type *p = t->ptrof; p != NULL; p = p->ptrof)
+        t = p;
+    }
+    switch (t->ty) {
+    case INT:
+      size = 4;
+    case PTR:
+      size = 8;
+    }
+    return;
+  }
+  find_var_size(node->rhs, size);
+}
+
+char *word_size(Node *node) {
+  int size;
+  find_var_size(node, &size);
+  switch (size) {
+  case 4:
+    return "DWORD PTR ";
+  }
+  return "";
+}
+
+char *reg_size(Node *node) {
+  int size;
+  find_var_size(node, &size);
+  switch (size) {
+  case 4:
+    return "edi";
+  }
+  return "rdi";
+}
+
 // if文のジャンプ先のラベルをユニークにする為のカウンタ
 int jmp_label_count;
 
@@ -23,26 +66,37 @@ void gen_lval(Node *node) {
   char *var_name = node->name;
 
   // 配列の為のポインタ型への変換
-  Type *t = map_get(var_map, var_name);
-  int var_offset;
-  if (t->ty == PTR) {
-    int ptr_offset = t->offset;
-    t = t->ptrof;
-    if (t->ty == ARRAY) {
-      printf("  lea rax, [rbp-%d]\n", t->offset);
-      printf("  push rax\n");
-      printf("  lea rax, [rbp-%d]\n", ptr_offset);
-      printf("  pop rdi\n");
-      printf("  mov [rax], rdi\n");
+  Type *t;
+  t = map_get(var_map, var_name);
+  if (t != NULL) {
+    int var_offset;
+    if (t->ty == PTR) {
+      int ptr_offset = t->offset;
+      t = t->ptrof;
+      if (t->ty == ARRAY) {
+        printf("  lea rax, [rbp-%d]\n", t->offset);
+        printf("  push rax\n");
+        printf("  lea rax, [rbp-%d]\n", ptr_offset);
+        printf("  pop rdi\n");
+        printf("  mov [rax], rdi\n");
+      }
+      var_offset = ptr_offset;
+    } else {
+      var_offset = t->offset;
     }
-    var_offset = ptr_offset;
-  } else {
-    var_offset = t->offset;
+
+    printf("  mov rax, rbp\n");
+    printf("  sub rax, %d\n", var_offset);
+    printf("  push rax\n");
+    return;
   }
 
-  printf("  mov rax, rbp\n");
-  printf("  sub rax, %d\n", var_offset);
-  printf("  push rax\n");
+  // グローバル変数を参照
+  t = map_get(gl_var_map, var_name);
+  if (t != NULL) {
+    printf("  lea rax, %s[rip]\n", var_name);
+    printf("  push rax\n");
+  }
 }
 
 //　レジスタマシンでスタックマシンをエミュレートし、コンパイルする
@@ -216,6 +270,20 @@ void gen(Node *node) {
     return;
   }
 
+  // グローバル変数定義
+  if (node->ty == ND_DEF_VAR) {
+    char *label = node->name;
+    printf("%s:\n", label);
+    Type *t = map_get(gl_var_map, label);
+    int size = base_type_size(t);
+    if (t != NULL) {
+      if ((Type *)t->ptrof == ARRAY)
+        size += array_size_of(t->ptrof);
+    }
+    printf("  .zero %d\n", size);
+    return;
+  }
+
   // 関数定義
   if (node->ty == ND_DEF_FUNC) {
     char *func_label = node->name;
@@ -277,7 +345,10 @@ void gen(Node *node) {
 
     printf("  pop rdi\n");
     printf("  pop rax\n");
-    printf("  mov [rax], rdi\n");
+
+    char *lhs_siz = word_size(node->lhs);
+    char *rhs_siz = reg_size(node->lhs);
+    printf("  mov %s[rax], %s\n", lhs_siz, rhs_siz);
     printf("  push rdi\n");
     return;
   }
@@ -293,6 +364,8 @@ void gen(Node *node) {
   int siz = 0;
   if (node->lhs->name != NULL) {
     Type *t = (Type *)map_get(var_map, node->lhs->name);
+    if (t == NULL)
+      t = (Type *)map_get(gl_var_map, node->lhs->name);
 
     if ((t != NULL) && (t->ty == PTR)) {
       is_pointer = 1;

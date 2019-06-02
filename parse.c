@@ -1,5 +1,20 @@
 #include "cycc.h"
 
+// 変数の型のサイズを返す　
+// 変数をマップする際に使う
+int base_type_size(Type *t) {
+  int base;
+  switch (t->ty) {
+  case PTR:
+    base = 8;
+    break;
+  case INT:
+    base = 4;
+    break;
+  }
+  return base;
+}
+
 // トークンの為の関数
 Token *new_token() {
   Token *token = malloc(sizeof(Token));
@@ -263,7 +278,10 @@ void tokenize(char *user_input) {
 
 // パーサの関数宣言
 void program();
-Node *func();
+Node *decl();
+Type *read_decl_type();
+Node *read_decl_func_tail();
+Node *read_decl_var_tail();
 Node *stmt();
 Node *var_decl();
 Node *expr();
@@ -380,12 +398,14 @@ void array_as_pointer(Node *node) {
 }
 
 // パースされた複数の関数定義を100個まで格納
-Node *funcs[100];
+Node *code[100];
 
 // パーサ
 //
 // 生成規則:
-// program = func*
+// program = decl*
+// decl = func
+// 	| var_decl ";"
 // func = "int" ident "(" ( var_decl? (, var_decl)* )? ")" "{" stmt* "}"
 // stmt = expr ";"
 // 	| "{" stmt* "}"
@@ -412,29 +432,61 @@ Node *funcs[100];
 void program() {
   int i = 0;
   while (((Token *)tokens->data[pos])->ty != TK_EOF) {
-    funcs[i++] = func();
+    code[i++] = decl();
   }
-  funcs[i] = NULL;
+  code[i] = NULL;
 }
 
-Node *func() {
+Node *decl() {
   Node *node;
 
-  // 戻り値
-  if (!consume(TK_INT))
-    error_at((((Token *)(tokens->data[pos]))->input),
-             "戻り値のintキーワードがありません");
+  // 型の部分　
+  Type *ty = read_decl_type();
 
-  // 関数名
+  // 識別子
   if (((Token *)(tokens->data[pos]))->ty == TK_IDENT) {
-    char *func_label = ((Token *)tokens->data[pos++])->name;
-    node = new_node_ident(func_label);
-    node->ty = ND_DEF_FUNC;
-    node->args = new_vector();
+    char *label = ((Token *)tokens->data[pos])->name;
+    if (forward('(')) {
+      pos++;
+      node = read_decl_func_tail(label);
+    } else if ((forward('[')) || (forward(';'))) {
+      pos++;
+      ty = read_decl_var_tail(ty);
+      node = malloc(sizeof(Node));
+      node->name = label;
+      node->ty = ND_DEF_VAR;
+      map_put(gl_var_map, label, (void *)ty);
+    }
   } else {
-    error_at(((Token *)(tokens->data[pos]))->input,
-             "関数名からはじまっていません");
+    error_at(((Token *)(tokens->data[pos]))->input, "識別子がありません");
   }
+
+  return node;
+}
+
+Type *read_decl_type() {
+  // int キーワード
+  if (!consume(TK_INT)) {
+    error_at((((Token *)(tokens->data[pos]))->input),
+             "'int'キーワードがありません");
+  }
+
+  // ポインタの部分
+  int ptr_count = 0;
+  while (consume('*'))
+    ptr_count++;
+
+  Type *ty = malloc(sizeof(Type));
+  ty->ty = INT;
+  ty->ptrof = NULL;
+
+  return pointer(ty, ptr_count);
+}
+
+Node *read_decl_func_tail(char *label) {
+  Node *node = new_node_ident(label);
+  node->ty = ND_DEF_FUNC;
+  node->args = new_vector();
 
   // 仮引数
   if (!consume('('))
@@ -476,6 +528,18 @@ Node *func() {
   }
 
   return node;
+}
+
+Node *read_decl_var_tail(Type *ty) {
+  // 配列の部分
+  ty = array(ty);
+  if (ty->ty == ARRAY) {
+    ty = pointer(ty, 1);
+  }
+  if (!consume(';'))
+    error_at((((Token *)(tokens->data[pos]))->input),
+             "';'ではないトークンです");
+  return ty;
 }
 
 Node *stmt() {
@@ -620,16 +684,7 @@ Node *var_decl() {
   Type *var = pointer(tail, ptr_count);
   var->offset = 8 * ++var_count;
 
-  int base;
-  switch (tail->ty) {
-  case PTR:
-    base = 8;
-    break;
-  case INT:
-    base = 4;
-    break;
-  }
-
+  int base = base_type_size(tail);
   int siz = 1;
 
   // 配列の部分
@@ -803,10 +858,13 @@ Node *unary() {
   return term();
 }
 
+// グローバル変数の為のマップ
+Map *gl_var_map;
+
 // 複数文字のローカル変数の為のマップ
 Map *var_map;
 
-// 変数の為のカウンター
+// ローカル変数の為のカウンター
 int var_count;
 
 // termはexprやmulのように左結合でない
@@ -871,7 +929,9 @@ Node *ident() {
   if (!(((Token *)(tokens->data[pos]))->ty == TK_IDENT))
     error_at(((Token *)(tokens->data[pos]))->input, "識別子がありません");
   char *var_name = ((Token *)tokens->data[pos])->name;
-  if ((map_get(var_map, var_name) == NULL) && !forward('(')) {
+  if (((map_get(var_map, var_name) == NULL) &&
+       map_get(gl_var_map, var_name) == NULL) &&
+      !forward('(')) {
     error_at((((Token *)(tokens->data[pos]))->input),
              "定義された変数ではありません");
   }
