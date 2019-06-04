@@ -1,5 +1,6 @@
 #include "cycc.h"
 
+// 型のサイズを探す
 void find_var_size(Node *node, int *size) {
   if (node != NULL)
     return;
@@ -25,6 +26,8 @@ void find_var_size(Node *node, int *size) {
   find_var_size(node->rhs, size);
 }
 
+// 型のサイズを表す文字列を返す
+// メモリアクセス時のサイズ明記
 char *word_size(Node *node) {
   int size;
   find_var_size(node, &size);
@@ -35,6 +38,8 @@ char *word_size(Node *node) {
   return "";
 }
 
+// 型のサイズを表す文字列を返す
+// レジスタのエイリアス名
 char *reg_size(Node *node) {
   int size;
   find_var_size(node, &size);
@@ -45,6 +50,8 @@ char *reg_size(Node *node) {
   return "rdi";
 }
 
+// 配列型のベースの型のサイズを返す
+// 例えば、int[10]ならint(4bytes)
 int base_type_size_of_array(Type *t) {
   for (Type *p = t->ptrof; p != NULL; p = p->ptrof)
     t = p;
