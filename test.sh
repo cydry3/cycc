@@ -166,5 +166,8 @@ try 0 "int a; int main() { 0; }"
 try 0 "int a; int main() { return a;}"
 try 1 "int a; int main() { a = 1; return a;}"
 try 3 "int foo; int bar; int main() { foo = 1; bar = 2; return foo + bar;}"
+try 0 "int a[10]; int main() { return a[0];}"
+try 2 "int a[10]; int main() { a[0] = 2; return a[0];}"
+try 5 "int a[100]; int main() { a[0] = 2; a[11] = 3; return a[0] + a[11];}"
 
 echo OK

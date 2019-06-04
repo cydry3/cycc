@@ -1,6 +1,6 @@
 #include "cycc.h"
 
-int find_var_size(Node *node, int *size) {
+void find_var_size(Node *node, int *size) {
   if (node != NULL)
     return;
   find_var_size(node->lhs, size);
@@ -14,9 +14,11 @@ int find_var_size(Node *node, int *size) {
     }
     switch (t->ty) {
     case INT:
-      size = 4;
+      *size = 4;
+      return;
     case PTR:
-      size = 8;
+      *size = 8;
+      return;
     }
     return;
   }
@@ -41,6 +43,12 @@ char *reg_size(Node *node) {
     return "edi";
   }
   return "rdi";
+}
+
+int base_type_size_of_array(Type *t) {
+  for (Type *p = t->ptrof; p != NULL; p = p->ptrof)
+    t = p;
+  return base_type_size(t);
 }
 
 // if文のジャンプ先のラベルをユニークにする為のカウンタ
@@ -94,8 +102,31 @@ void gen_lval(Node *node) {
   // グローバル変数を参照
   t = map_get(gl_var_map, var_name);
   if (t != NULL) {
-    printf("  lea rax, %s[rip]\n", var_name);
-    printf("  push rax\n");
+    if (t->ty != PTR) {
+      printf("  lea rax, %s[rip]\n", var_name);
+      printf("  push rax\n");
+      return;
+    }
+
+    t = t->ptrof;
+    if (t != NULL) {
+      if (t->ty != ARRAY) {
+        printf("  lea rax, %s[rip]\n", var_name);
+        printf("  push rax\n");
+        return;
+      }
+
+      if (t->ty == ARRAY) {
+        const int ptr_size = 8;
+        printf("  lea rax, %s[rip+%d]\n", var_name, ptr_size);
+        printf("  push rax\n");
+        printf("  lea rax, %s[rip]\n", var_name);
+        printf("  pop rdi\n");
+        printf("  mov [rax], rdi\n");
+        printf("  push rax\n");
+        return;
+      }
+    }
   }
 }
 
@@ -277,8 +308,12 @@ void gen(Node *node) {
     Type *t = map_get(gl_var_map, label);
     int size = base_type_size(t);
     if (t != NULL) {
-      if ((Type *)t->ptrof == ARRAY)
-        size += array_size_of(t->ptrof);
+      t = t->ptrof;
+      if (t != NULL)
+        if (t->ty == ARRAY) {
+          int base_size = base_type_size_of_array(t);
+          size += (base_size * t->array_size);
+        }
     }
     printf("  .zero %d\n", size);
     return;

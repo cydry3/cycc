@@ -44,7 +44,7 @@ typedef struct {
 } Map;
 
 // 変数の型
-typedef struct {
+typedef struct Type {
   enum { INT, PTR, ARRAY } ty;
   struct Type *ptrof;
   int offset;
@@ -132,3 +132,7 @@ int foo();
 
 // グローバル変数の為のマップ
 Map *gl_var_map;
+
+// 変数の型のサイズを返す　
+// 変数をマップする際に使う
+int base_type_size(Type *t);
