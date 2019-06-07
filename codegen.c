@@ -17,9 +17,7 @@ void find_var_size(Node *node, int *size) {
 
 // 型のサイズを表す文字列を返す
 // メモリアクセス時のサイズ明記
-char *word_size(Node *node) {
-  int size;
-  find_var_size(node, &size);
+char *word_size(int size) {
   switch (size) {
   case 4:
     return "DWORD PTR ";
@@ -31,9 +29,7 @@ char *word_size(Node *node) {
 
 // 型のサイズを表す文字列を返す
 // レジスタのエイリアス名
-char *rdi_size(Node *node) {
-  int size;
-  find_var_size(node, &size);
+char *rdi_size(int size) {
   switch (size) {
   case 4:
     return "edi";
@@ -42,9 +38,7 @@ char *rdi_size(Node *node) {
   }
   return "rdi";
 }
-char *rax_size(Node *node) {
-  int size;
-  find_var_size(node, &size);
+char *rax_size(int size) {
   switch (size) {
   case 4:
     return "eax";
@@ -249,10 +243,10 @@ void gen(Node *node) {
     gen_lval(node);
     printf("  pop rax\n");
 
-    char *w_siz = word_size(node);
-    char *r_siz = rax_size(node);
     int size = 0;
     find_var_size(node, &size);
+    char *w_siz = word_size(size);
+    char *r_siz = rax_size(size);
     if (size == 1)
       printf("  movsx rax, %s[rax]\n", w_siz);
     else
@@ -402,8 +396,10 @@ void gen(Node *node) {
     printf("  pop rdi\n");
     printf("  pop rax\n");
 
-    char *w_siz = word_size(node->lhs);
-    char *r_siz = rdi_size(node->lhs);
+    int size = 0;
+    find_var_size(node->lhs, &size);
+    char *w_siz = word_size(size);
+    char *r_siz = rdi_size(size);
     printf("  mov %s[rax], %s\n", w_siz, r_siz);
     printf("  push rdi\n");
     return;
