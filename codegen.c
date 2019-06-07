@@ -2,25 +2,14 @@
 
 // 型のサイズを探す
 void find_var_size(Node *node, int *size) {
-  if (node != NULL)
+  if (node == NULL)
     return;
   find_var_size(node->lhs, size);
   if (node->ty == ND_IDENT) {
     Type *t = map_get(var_map, node->name);
     if (t == NULL)
       t = map_get(gl_var_map, node->name);
-    if (((Type *)t->ptrof)->ty == ARRAY) {
-      for (Type *p = t->ptrof; p != NULL; p = p->ptrof)
-        t = p;
-    }
-    switch (t->ty) {
-    case INT:
-      *size = 4;
-      return;
-    case PTR:
-      *size = 8;
-      return;
-    }
+    *size = base_type_size(t);
     return;
   }
   find_var_size(node->rhs, size);
@@ -34,20 +23,35 @@ char *word_size(Node *node) {
   switch (size) {
   case 4:
     return "DWORD PTR ";
+  case 1:
+    return "BYTE PTR ";
   }
   return "";
 }
 
 // 型のサイズを表す文字列を返す
 // レジスタのエイリアス名
-char *reg_size(Node *node) {
+char *rdi_size(Node *node) {
   int size;
   find_var_size(node, &size);
   switch (size) {
   case 4:
     return "edi";
+  case 1:
+    return "dil";
   }
   return "rdi";
+}
+char *rax_size(Node *node) {
+  int size;
+  find_var_size(node, &size);
+  switch (size) {
+  case 4:
+    return "eax";
+  case 1:
+    return "al";
+  }
+  return "rax";
 }
 
 // 配列型のベースの型のサイズを返す
@@ -140,7 +144,8 @@ void gen_lval(Node *node) {
 //　レジスタマシンでスタックマシンをエミュレートし、コンパイルする
 void gen(Node *node) {
   if (node->ty == ND_NUM) {
-    printf("  push %d\n", node->val);
+    printf("  mov eax, %d\n", node->val);
+    printf("  push rax\n");
     return;
   }
 
@@ -243,7 +248,16 @@ void gen(Node *node) {
   if (node->ty == ND_IDENT) {
     gen_lval(node);
     printf("  pop rax\n");
-    printf("  mov rax, [rax]\n");
+
+    char *w_siz = word_size(node);
+    char *r_siz = rax_size(node);
+    int size = 0;
+    find_var_size(node, &size);
+    if (size == 1)
+      printf("  movsx rax, %s[rax]\n", w_siz);
+    else
+      printf("  mov %s, %s[rax]\n", r_siz, w_siz);
+
     printf("  push rax\n");
     return;
   }
@@ -388,9 +402,9 @@ void gen(Node *node) {
     printf("  pop rdi\n");
     printf("  pop rax\n");
 
-    char *lhs_siz = word_size(node->lhs);
-    char *rhs_siz = reg_size(node->lhs);
-    printf("  mov %s[rax], %s\n", lhs_siz, rhs_siz);
+    char *w_siz = word_size(node->lhs);
+    char *r_siz = rdi_size(node->lhs);
+    printf("  mov %s[rax], %s\n", w_siz, r_siz);
     printf("  push rdi\n");
     return;
   }

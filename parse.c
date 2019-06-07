@@ -11,6 +11,11 @@ int base_type_size(Type *t) {
   case INT:
     base = 4;
     break;
+  case CHAR:
+    base = 1;
+    break;
+  default:
+    error("型のサイズが不明です");
   }
   return base;
 }
@@ -161,6 +166,17 @@ void tokenize(char *user_input) {
       vec_push(tokens, token);
       i++;
       p += 3;
+      continue;
+    }
+
+    // char キーワード
+    if (strncmp(p, "char", 4) == 0 && !is_alnum(p[4])) {
+      Token *token = new_token();
+      token->ty = TK_CHAR;
+      token->input = p;
+      vec_push(tokens, token);
+      i++;
+      p += 4;
       continue;
     }
 
@@ -324,6 +340,13 @@ int consume(int ty) {
   return 1;
 }
 
+// トークンを消費せず、その型が期待したものかを確認する
+int current(int ty) {
+  if (((Token *)(tokens->data[pos]))->ty != ty)
+    return 0;
+  return 1;
+}
+
 // 次のトークンを先読みし、期待したトークンかを確認する
 // トークンは消費しない
 int forward(int ty) {
@@ -414,7 +437,7 @@ Node *code[100];
 // 	| "while" "(" expr ")" stmt
 // 	| "for" "(" expr? ";" expr? ":"  expr? ")" stmt
 // 	| var_decl ";"
-// var_decl = "int" ( "*" )? ident ( ( "[" num "]" )* )?
+// var_decl = ("int" | "char") ( "*" )? ident ( ( "[" num "]" )* )?
 // expr = assign
 // assign = equiality ("=" assign)?
 // equiality = relational ("==" relational | "!=" relational)*
@@ -461,20 +484,22 @@ Node *decl() {
 }
 
 Type *read_decl_type() {
-  // int キーワード
-  if (!consume(TK_INT)) {
+  // int/char キーワード
+  Type *ty = malloc(sizeof(Type));
+  if (consume(TK_INT)) {
+    ty->ty = INT;
+  } else if (consume(TK_CHAR)) {
+    ty->ty = CHAR;
+  } else {
     error_at((((Token *)(tokens->data[pos]))->input),
-             "'int'キーワードがありません");
+             "'int'/'char'キーワードがありません");
   }
+  ty->ptrof = NULL;
 
   // ポインタの部分
   int ptr_count = 0;
   while (consume('*'))
     ptr_count++;
-
-  Type *ty = malloc(sizeof(Type));
-  ty->ty = INT;
-  ty->ptrof = NULL;
 
   return pointer(ty, ptr_count);
 }
@@ -490,19 +515,10 @@ Node *read_decl_func_tail(char *label) {
              "仮引数の開きカッコがありません");
 
   if (!consume(')')) {
-    if (!consume(TK_INT))
-      error_at((((Token *)(tokens->data[pos]))->input),
-               "仮引数のintキーワードがありません");
-
     vec_push(node->args, (void *)var_decl());
 
-    while (consume(',')) {
-      if (!consume(TK_INT))
-        error_at((((Token *)(tokens->data[pos]))->input),
-                 "仮引数のintキーワードがありません");
-
+    while (consume(','))
       vec_push(node->args, (void *)var_decl());
-    }
 
     if (!consume(')'))
       error_at((((Token *)(tokens->data[pos]))->input),
@@ -624,8 +640,8 @@ Node *stmt() {
     return node;
   }
 
-  // int キーワードによる変数定義
-  if (consume(TK_INT)) {
+  // int あるいはcharキーワードによる変数定義
+  if ((current(TK_INT)) || (current(TK_CHAR))) {
     node = var_decl();
 
     if (!consume(';'))
@@ -664,6 +680,9 @@ Node *stmt() {
 }
 
 Node *var_decl() {
+  // 型の部分　
+  Type *ty = read_decl_type();
+
   Node *node;
   // ポインタの部分
   int ptr_count = 0;
@@ -677,14 +696,10 @@ Node *var_decl() {
   char *var_name = ((Token *)tokens->data[pos++])->name;
   node->name = var_name;
 
-  Type *tail = malloc(sizeof(Type));
-  tail->ty = INT;
-  tail->ptrof = NULL;
-
-  Type *var = pointer(tail, ptr_count);
+  Type *var = pointer(ty, ptr_count);
   var->offset = 8 * ++var_count;
 
-  int base = base_type_size(tail);
+  int base = base_type_size(ty);
   int siz = 1;
 
   // 配列の部分

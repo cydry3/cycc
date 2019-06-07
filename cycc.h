@@ -19,6 +19,7 @@ enum {
   TK_WHIL,      // while文を表すトークン
   TK_FOR,       // for文を表すトークン
   TK_INT,       // intキーワードを表すトークン
+  TK_CHAR,      // charキーワードを表すトークン
   TK_SIZEOF,    // sizeofキーワードを表すトークン
 };
 
@@ -45,7 +46,7 @@ typedef struct {
 
 // 変数の型
 typedef struct Type {
-  enum { INT, PTR, ARRAY } ty;
+  enum { INT, PTR, ARRAY, CHAR } ty;
   struct Type *ptrof;
   int offset;
   size_t array_size;
