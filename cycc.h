@@ -20,6 +20,7 @@ enum {
   TK_FOR,       // for文を表すトークン
   TK_INT,       // intキーワードを表すトークン
   TK_CHAR,      // charキーワードを表すトークン
+  TK_LITER,     // 文字列リテラルを表すトークン
   TK_SIZEOF,    // sizeofキーワードを表すトークン
 };
 
@@ -29,6 +30,7 @@ typedef struct {
   int val;     // tyがTK_NUMの場合、その数値
   char *name;  // tyがTK_IDENTの場合、その名前
   char *input; // トークン文字列（エラーメッセージ用）
+  int liter; // tyがTK_LITERの場合、そのラベルを識別するカウント
 } Token;
 
 // 可変長ベクタ
@@ -70,6 +72,7 @@ enum {
   ND_DEREF,     // デリファレンス演算子'*'の型
   ND_ADDRESS,   // アドレス演算子'&'の型
   ND_DEF_VAR,   // グローバル変数定義の型
+  ND_LITER,     // 文字列リテラルの型
 };
 
 typedef struct Node {
@@ -81,6 +84,7 @@ typedef struct Node {
   Vector *block;    // tyがND_BLOCKの場合のみ使う
   Vector *args;     // tyがND_FUNCの場合のみ使う
   int deref;        // tyがND_DEREFの場合のみ使う
+  int liter;        // tyがND_LITERの場合のみ使う
 } Node;
 
 // 可変長ベクタの為の関数
@@ -137,3 +141,8 @@ Map *gl_var_map;
 // 変数の型のサイズを返す　
 // 変数をマップする際に使う
 int base_type_size(Type *t);
+
+// 文字列リテラル
+extern Vector *literals;
+// 文字列リテラルを識別するカウント、literals count
+extern int liter_count;

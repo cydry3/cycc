@@ -73,6 +73,12 @@ void gen_lval(Node *node) {
     return;
   }
 
+  if (node->ty == ND_LITER) {
+    printf("  lea rax, .LC%d[rip]\n", node->liter);
+    printf("  push rax\n");
+    return;
+  }
+
   if (node->ty != ND_IDENT)
     error("代入の左辺値が変数ではありません");
 
@@ -231,6 +237,11 @@ void gen(Node *node) {
       printf("  mov rax, [rax]\n");
       printf("  push rax\n");
     }
+    return;
+  }
+
+  if (node->ty == ND_LITER) {
+    gen_lval(node);
     return;
   }
 

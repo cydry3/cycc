@@ -19,3 +19,4 @@ int alloc4(int **y, int a, int b, int c, int d) {
 
   *y = x;
 }
+int printfoo(char *str) { printf(str); }

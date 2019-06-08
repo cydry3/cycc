@@ -34,6 +34,11 @@ Vector *tokens;
 // 現在着目しているtoken->dataのインデックス
 int pos;
 
+// 文字列リテラル
+Vector *literals;
+// 文字列リテラルを識別するカウント、literals count
+int liter_count;
+
 // エラーを報告する関数
 // printfと同じ引数を受け取る
 void error(char *fmt, ...) {
@@ -248,6 +253,26 @@ void tokenize(char *user_input) {
       continue;
     }
 
+    // 文字列リテラル
+    if (*p == '"') {
+      bp = p;
+      p++;
+      for (; *p != '"'; p++)
+        ;
+      p++;
+
+      Token *token = new_token();
+      token->ty = TK_LITER;
+      token->input = bp;
+      token->name = token_dup(bp, (p - bp));
+      token->liter = liter_count++;
+      vec_push(tokens, token);
+
+      vec_push(literals, token);
+      i++;
+      continue;
+    }
+
     if (isdigit(*p)) {
       Token *token = new_token();
       token->ty = TK_NUM;
@@ -451,6 +476,7 @@ Node *code[100];
 // term = num
 //	| ident ("(" expr? (, expr)* ")")? ( "[" num "]" )?
 //	| "(" expr ")"
+//	| "\"" character* "\""
 //
 void program() {
   int i = 0;
@@ -892,11 +918,12 @@ Node *term() {
                "開きカッコに対する閉じカッコがありません");
     return node;
   }
+
   // 上記でない場合は、numかidentが来るハズ
   if (((Token *)(tokens->data[pos]))->ty == TK_NUM)
     return new_node_num(((Token *)tokens->data[pos++])->val);
 
-  else if (((Token *)(tokens->data[pos]))->ty == TK_IDENT) {
+  if (((Token *)(tokens->data[pos]))->ty == TK_IDENT) {
     Node *node = ident();
 
     // 関数であるか判定
@@ -936,8 +963,15 @@ Node *term() {
     return node;
   }
 
+  if (((Token *)(tokens->data[pos]))->ty == TK_LITER) {
+    Node *node = malloc(sizeof(Node));
+    node->ty = ND_LITER;
+    node->liter = ((Token *)(tokens->data[pos++]))->liter;
+    return node;
+  }
+
   error_at(((Token *)(tokens->data[pos]))->input,
-           "数値でも開きカッコでもないトークンです");
+           "数値でも識別子でも文字列リテラルでもないトークンです");
 }
 
 Node *ident() {
