@@ -167,13 +167,13 @@ void gen(Node *node) {
   }
 
   if (node->ty == ND_IF) {
+    int jmp_label = jmp_label_count++;
     gen(node->lhs);
     printf("  pop rax\n");
     printf("  cmp rax, 0\n");
-    printf("  je .Lend%03d\n", jmp_label_count);
+    printf("  je .Lend%03d\n", jmp_label);
     gen(node->rhs);
-    printf(".Lend%03d:\n", jmp_label_count);
-    jmp_label_count++;
+    printf(".Lend%03d:\n", jmp_label);
     return;
   }
 
