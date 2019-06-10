@@ -474,7 +474,7 @@ Node *code[100];
 // 	 | ( ("*")* )? ( ident | "(" expr ")" )
 // 	 | ("&")? ident
 // term = num
-//	| ident ("(" expr? (, expr)* ")")? ( "[" num "]" )?
+//	| ident ("(" expr? (, expr)* ")")? ( "[" ( num | ident ) "]" )?
 //	| "(" expr ")"
 //	| "\"" character* "\""
 //
@@ -571,6 +571,7 @@ Node *read_decl_func_tail(char *label) {
 Node *read_decl_var_tail(Type *ty, char *label) {
   // 配列の部分
   ty = array(ty);
+
   if (ty->ty == ARRAY) {
     ty = pointer(ty, 1);
   }
@@ -944,11 +945,14 @@ Node *term() {
                  "開きカッコに対する閉じカッコがありません");
     }
 
-    // 配列であるか判定
+    // 配列の添字であるか判定
     if (consume('[')) {
       Node *index;
-      if (((Token *)(tokens->data[pos]))->ty == TK_NUM)
-        index = new_node_num(((Token *)tokens->data[pos++])->val);
+      Token *token = tokens->data[pos++];
+      if (token->ty == TK_NUM)
+        index = new_node_num(token->val);
+      else if (token->ty == TK_IDENT)
+        index = new_node_ident(token->name);
       else
         error_at((((Token *)(tokens->data[pos]))->input),
                  "添字[数]がありません");
