@@ -3,12 +3,17 @@ try() {
     if [ "$1" = "-out" ]; then
 	expected="$2"
 	input="$3"
+	./cycc "$input" > tmp.s
+    elif [ "$2" = "-file" ]; then
+	expected="$1"
+	input="$3"
+	./cycc "$2" "$input" > tmp.s
     else
 	expected="$1"
 	input="$2"
+	./cycc "$input" > tmp.s
     fi
 
-    ./cycc "$input" > tmp.s
 
     if [ "$1" = "-out" ]; then
 	gcc -o tmp tmp.s foo.o
@@ -180,5 +185,6 @@ try 3 "int main() { char x[3]; int y; x[0] = -1; x[1] = 2; y = 4; return x[0] + 
 try 3 "char x[3]; int y; int main() { x[0] = -1; x[1] = 2; y = 4; return x[0] + y;}"
 try -out abc 'int main() { char *x; x = "abc"; printfoo(x);}'
 try -out hello 'int main() { char *y; y = "hello"; printfoo(y);}'
+try 13 -file "bar.txt"
 
 echo OK
