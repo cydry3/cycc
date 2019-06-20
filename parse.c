@@ -29,6 +29,9 @@ Token *new_token() {
 // 入力プログラム
 char *user_input;
 
+// 入力プログラムのファイル名
+char *filename;
+
 // トークナイズした結果のトークン列をこの可変長ベクタに保存
 Vector *tokens;
 // 現在着目しているtoken->dataのインデックス
@@ -51,9 +54,37 @@ void error(char *fmt, ...) {
 
 // エラー箇所を報告する
 void error_at(char *loc, char *msg) {
-  int pos = loc - user_input;
-  fprintf(stderr, "%s\n", user_input);
-  fprintf(stderr, "%*s", pos, ""); // pos個空白を出力
+  if (filename == NULL) {
+    int pos = loc - user_input;
+    fprintf(stderr, "%s\n", user_input);
+    fprintf(stderr, "%*s", pos, ""); // pos個空白を出力
+    fprintf(stderr, "^ %s\n", msg);
+    exit(1);
+  }
+
+  // locが含まれている行の開始地点と終了地点を取得
+  // アドレスを比較
+  char *line = loc; // 先頭
+  while (user_input < line && line[-1] != '\n')
+    line--;
+
+  char *end = loc; // 終点
+  while (*end != '\n')
+    end++;
+
+  // 全体の何行目であるかを調べる
+  int line_num = 1;
+  for (char *p = user_input; p < line; p++)
+    if (*p == '\n')
+      line_num++;
+
+  // 見つかった行を表示する
+  int indent = fprintf(stderr, "%s:%d: ", filename, line_num);
+  fprintf(stderr, "%.*s\n", (int)(end - line), line);
+
+  // エラー箇所を'^'で指し示す
+  int pos = loc - line + indent;
+  fprintf(stderr, "%*s", pos, "");
   fprintf(stderr, "^ %s\n", msg);
   exit(1);
 }

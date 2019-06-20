@@ -186,5 +186,6 @@ try 3 "char x[3]; int y; int main() { x[0] = -1; x[1] = 2; y = 4; return x[0] + 
 try -out abc 'int main() { char *x; x = "abc"; printfoo(x);}'
 try -out hello 'int main() { char *y; y = "hello"; printfoo(y);}'
 try 13 -file "bar.txt"
+try 4 -file "buzz.txt"
 
 echo OK

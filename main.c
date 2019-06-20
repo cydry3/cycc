@@ -37,8 +37,12 @@ int main(int argc, char **argv) {
   }
 
   // ユーザの入力
+  // ファイルによる入力であるか判定する
+  filename = NULL;
   if (strncmp(argv[1], "-file", 5) == 0) {
-    user_input = read_file(argv[2]);
+    filename = argv[2];
+    user_input = read_file(filename);
+
   } else {
     user_input = argv[1];
   }

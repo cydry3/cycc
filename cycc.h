@@ -104,6 +104,9 @@ void gen(Node *node);
 // 入力プログラム
 extern char *user_input;
 
+// 入力プログラムのファイル名
+char *filename;
+
 // トークナイズした結果のトークン列をこの可変長ベクタに保存
 extern Vector *tokens;
 
