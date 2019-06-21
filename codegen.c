@@ -270,9 +270,8 @@ void gen(Node *node) {
   if (node->ty == ND_FUNC) {
     char *func_name = node->name;
     if (node->args->len != 0) {
-      int else_label_before = jmp_label_count++;
-      int end_label_before = jmp_label_count++;
-      int end_label_after = jmp_label_count++;
+      int before_label = jmp_label_count++;
+      int after_label = jmp_label_count++;
 
       // 引数を評価
       int argc = node->args->len;
@@ -290,36 +289,26 @@ void gen(Node *node) {
       printf("  mov r10, %d\n", (16 - 1)); // x % 2**n == x & 2**n-1
       printf("  and rax, r10\n");          // 剰余をAND演算で行う
       printf("  cmp rax, 0\n");
-      printf("  jne .Lelse%03d\n", else_label_before);
-      printf("  push 0\n");
-      printf("  push 0\n");
-      printf("  jmp .Lend%03d\n", end_label_before);
-      printf(".Lelse%03d:\n", else_label_before);
-      printf("  push 1\n");
-      printf(".Lend%03d:\n", end_label_before);
+      printf("  jne .Lelse%03d\n", before_label);
+      printf("  add rsp, rax\n");
+      printf(".Lelse%03d:\n", before_label);
 
       // 関数呼び出し
       printf("  mov rax, %d\n", argc);
       printf("  call %s\n", func_name);
       printf("  push rax\n");
 
-      // スタックトップを一時RDIへ退避
-      printf("  pop rax\n");
-      printf("  mov rdi, rax\n");
-
       // スタックポインタが16の倍数であるかを判定し、揃える
       // 関数呼び出し後の処理
       // 揃っていた場合は0が、そうでない場合は1がスタックに積まれているハズ
-
-      printf("  pop rax\n");
+      printf("  mov rax, [rsp]\n");
+      printf("  mov r10, %d\n", (16 - 1)); // x % 2**n == x & 2**n-1
+      printf("  and rax, r10\n");          // 剰余をAND演算で行う
       printf("  cmp rax, 0\n");
-      printf("  jne .Lend%03d\n", end_label_after);
-      printf("  pop rax\n");
-      printf(".Lend%03d:\n", end_label_after);
+      printf("  jne .Lend%03d\n", after_label);
+      printf("  sub rsp, rax\n");
+      printf(".Lend%03d:\n", after_label);
 
-      // スタックトップだった値をRDIから復帰
-      printf("  mov rax, rdi\n");
-      printf("  push rax\n");
     } else {
       printf("  call %s\n", func_name);
       printf("  push rax\n");
