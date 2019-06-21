@@ -285,30 +285,32 @@ void gen(Node *node) {
       // スタックポインタが16の倍数であるかを判定し、揃える
       // 関数呼び出し前の処理
       // 揃っていた場合は0を、そうでない場合は1をスタックに積む
+      printf("  mov rbx, 0\n");
       printf("  mov rax, [rsp]\n");
       printf("  mov r10, %d\n", (16 - 1)); // x % 2**n == x & 2**n-1
       printf("  and rax, r10\n");          // 剰余をAND演算で行う
       printf("  cmp rax, 0\n");
       printf("  jne .Lend%03d\n", before_label);
       printf("  add rsp, rax\n");
+      printf("  mov rbx, rax\n");
       printf(".Lend%03d:\n", before_label);
 
       // 関数呼び出し
       printf("  mov rax, %d\n", argc);
       printf("  call %s\n", func_name);
-      printf("  push rax\n");
+      printf("  mov rdi, rax\n");
 
       // スタックポインタが16の倍数であるかを判定し、揃える
       // 関数呼び出し後の処理
       // 揃っていた場合は0が、そうでない場合は1がスタックに積まれているハズ
-      printf("  mov rax, [rsp]\n");
-      printf("  mov r10, %d\n", (16 - 1)); // x % 2**n == x & 2**n-1
-      printf("  and rax, r10\n");          // 剰余をAND演算で行う
+      printf("  mov rax, rbx\n");
       printf("  cmp rax, 0\n");
       printf("  jne .Lend%03d\n", after_label);
       printf("  sub rsp, rax\n");
       printf(".Lend%03d:\n", after_label);
 
+      printf("  mov rax, rdi\n");
+      printf("  push rax\n");
     } else {
       printf("  call %s\n", func_name);
       printf("  push rax\n");
