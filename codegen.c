@@ -296,7 +296,7 @@ void gen(Node *node) {
       printf(".Lend%03d:\n", before_label);
 
       // 関数呼び出し
-      printf("  mov rax, %d\n", argc);
+      printf("  mov al, 0\n");
       printf("  call %s\n", func_name);
       printf("  mov rdi, rax\n");
 
