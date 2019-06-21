@@ -289,9 +289,9 @@ void gen(Node *node) {
       printf("  mov r10, %d\n", (16 - 1)); // x % 2**n == x & 2**n-1
       printf("  and rax, r10\n");          // 剰余をAND演算で行う
       printf("  cmp rax, 0\n");
-      printf("  jne .Lelse%03d\n", before_label);
+      printf("  jne .Lend%03d\n", before_label);
       printf("  add rsp, rax\n");
-      printf(".Lelse%03d:\n", before_label);
+      printf(".Lend%03d:\n", before_label);
 
       // 関数呼び出し
       printf("  mov rax, %d\n", argc);
