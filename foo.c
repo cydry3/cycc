@@ -20,3 +20,5 @@ int alloc4(int **y, int a, int b, int c, int d) {
   *y = x;
 }
 int printfoo(char *str) { printf(str); }
+int printbar(char *str, int n) { printf(str, n); }
+int absfoo(int n) { return abs(n); }

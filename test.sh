@@ -19,7 +19,7 @@ try() {
 	gcc -o tmp tmp.s foo.o
 	actual=`./tmp`
     else
-	gcc -o tmp tmp.s
+	gcc -o tmp tmp.s foo.o
 	./tmp
 	actual="$?"
     fi
@@ -187,5 +187,6 @@ try -out abc 'int main() { char *x; x = "abc"; printfoo(x);}'
 try -out hello 'int main() { char *y; y = "hello"; printfoo(y);}'
 try 13 -file "bar.txt"
 try 4 -file "buzz.txt"
+try 92 -file "qux.txt"
 
 echo OK
