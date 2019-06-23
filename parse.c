@@ -366,8 +366,22 @@ Node *unary();
 Node *term();
 Node *ident();
 
+Node *init_node() {
+  Node *node;
+  node = malloc(sizeof(Node));
+  node->ty = 0;
+  node->lhs = NULL;
+  node->rhs = NULL;
+  node->val = 0;
+  node->name = NULL;
+  node->block = NULL;
+  node->args = NULL;
+  node->deref = 0;
+  node->liter = 0;
+}
+
 Node *new_node(int ty, Node *lhs, Node *rhs) {
-  Node *node = malloc(sizeof(Node));
+  Node *node = init_node();
   node->ty = ty;
   node->lhs = lhs;
   node->rhs = rhs;
@@ -375,14 +389,14 @@ Node *new_node(int ty, Node *lhs, Node *rhs) {
 }
 
 Node *new_node_num(int val) {
-  Node *node = malloc(sizeof(Node));
+  Node *node = init_node();
   node->ty = ND_NUM;
   node->val = val;
   return node;
 }
 
 Node *new_node_ident(char *name) {
-  Node *node = malloc(sizeof(Node));
+  Node *node = init_node();
   node->ty = ND_IDENT;
   node->name = name;
   return node;
@@ -609,7 +623,7 @@ Node *read_decl_var_tail(Type *ty, char *label) {
   if (!consume(';'))
     error_at((((Token *)(tokens->data[pos]))->input),
              "';'ではないトークンです");
-  Node *node = malloc(sizeof(Node));
+  Node *node = init_node();
   node->name = label;
   node->ty = ND_DEF_VAR;
   map_put(gl_var_map, label, (void *)ty);
@@ -617,10 +631,9 @@ Node *read_decl_var_tail(Type *ty, char *label) {
 }
 
 Node *stmt() {
-  Node *node;
+  Node *node = init_node();
 
   if (consume(TK_IF)) {
-    node = malloc(sizeof(Node));
     node->ty = ND_IF;
     if (!consume('('))
       error_at((((Token *)(tokens->data[pos]))->input),
@@ -635,7 +648,7 @@ Node *stmt() {
     if (consume(TK_ELSE)) {
       node->ty = ND_IFELSE;
 
-      Node *rhs_node = malloc(sizeof(Node));
+      Node *rhs_node = init_node();
       rhs_node->lhs = node->rhs;
       rhs_node->rhs = stmt();
       node->rhs = rhs_node;
@@ -645,7 +658,6 @@ Node *stmt() {
   }
 
   if (consume(TK_WHIL)) {
-    node = malloc(sizeof(Node));
     node->ty = ND_WHIL;
     if (!consume('('))
       error_at((((Token *)(tokens->data[pos]))->input),
@@ -659,12 +671,11 @@ Node *stmt() {
   }
 
   if (consume(TK_FOR)) {
-    node = malloc(sizeof(Node));
     node->ty = ND_FOR;
 
-    Node *node_lhs = malloc(sizeof(Node));
+    Node *node_lhs = init_node();
     node->lhs = node_lhs;
-    Node *node_rhs = malloc(sizeof(Node));
+    Node *node_rhs = init_node();
     node->rhs = node_rhs;
 
     if (!consume('('))
@@ -708,7 +719,6 @@ Node *stmt() {
   }
 
   if (consume('{')) {
-    node = malloc(sizeof(Node));
     node->ty = ND_BLOCK;
     node->block = new_vector();
 
@@ -723,7 +733,6 @@ Node *stmt() {
   }
 
   if (consume(TK_RETURN)) {
-    node = malloc(sizeof(Node));
     node->ty = ND_RETURN;
     node->lhs = expr();
 
@@ -741,14 +750,13 @@ Node *var_decl() {
   // 型の部分　
   Type *ty = read_decl_type();
 
-  Node *node;
+  Node *node = init_node();
   // ポインタの部分
   int ptr_count = 0;
   while (consume('*'))
     ptr_count++;
 
   // 識別子の部分
-  node = malloc(sizeof(Node));
   node->ty = ND_IDENT;
 
   char *var_name = ((Token *)tokens->data[pos++])->name;
@@ -942,9 +950,10 @@ int var_count;
 
 // termはexprやmulのように左結合でない
 Node *term() {
+  Node *node = init_node();
   // 開きカッコからはじまるなら、"(" expr ")"
   if (consume('(')) {
-    Node *node = expr();
+    node = expr();
     if (!consume(')'))
       error_at((((Token *)(tokens->data[pos]))->input),
                "開きカッコに対する閉じカッコがありません");
@@ -952,11 +961,13 @@ Node *term() {
   }
 
   // 上記でない場合は、numかidentが来るハズ
-  if (((Token *)(tokens->data[pos]))->ty == TK_NUM)
-    return new_node_num(((Token *)tokens->data[pos++])->val);
+  if (((Token *)(tokens->data[pos]))->ty == TK_NUM) {
+    node = new_node_num(((Token *)tokens->data[pos++])->val);
+    return node;
+  }
 
   if (((Token *)(tokens->data[pos]))->ty == TK_IDENT) {
-    Node *node = ident();
+    node = ident();
 
     // 関数であるか判定
     if (consume('(')) {
@@ -978,7 +989,7 @@ Node *term() {
 
     // 配列の添字であるか判定
     if (consume('[')) {
-      Node *index;
+      Node *index = init_node();
       Token *token = tokens->data[pos++];
       if (token->ty == TK_NUM)
         index = new_node_num(token->val);
@@ -999,7 +1010,6 @@ Node *term() {
   }
 
   if (((Token *)(tokens->data[pos]))->ty == TK_LITER) {
-    Node *node = malloc(sizeof(Node));
     node->ty = ND_LITER;
     node->liter = ((Token *)(tokens->data[pos++]))->liter;
     return node;
