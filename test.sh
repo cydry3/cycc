@@ -188,5 +188,9 @@ try -out hello 'int main() { char *y; y = "hello"; printfoo(y);}'
 try 13 -file "test/bar.txt"
 try 4 -file "test/buzz.txt"
 try 92 -file "test/qux.txt"
+try 1 'int expect(int actual, int expected, int id) { if (actual == expected) return 0; printbar("Test failed at %d\n", id); exitfoo(1); }
+    int main() { int got; int want; int id; got = 1; want = 0; id = 1; expect(got, want, id); }'
+try 0 'int expect(int actual, int expected, int id) { if (actual == expected) return 0; printbar("Test failed at %d\n", id); exitfoo(1); }
+    int main() { int got; int want; int id; got = 1; want = 1; id = 1; expect(got, want, id); }'
 
 echo OK

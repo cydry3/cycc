@@ -22,3 +22,4 @@ int alloc4(int **y, int a, int b, int c, int d) {
 int printfoo(char *str) { printf(str); }
 int printbar(char *str, int n) { printf(str, n); }
 int absfoo(int n) { return abs(n); }
+int exitfoo(int s) { exit(s); }
