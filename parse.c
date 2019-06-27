@@ -3,6 +3,11 @@
 // 現在着目しているtokens->dataのインデックス
 int pos;
 
+// トークンを得る関数
+Token *get_token(Vector *tokens, int pos) {
+  return (Token *)(tokens->data[pos]);
+}
+
 // エラーを報告する関数
 // printfと同じ引数を受け取る
 void error(char *fmt, ...) {
@@ -69,7 +74,7 @@ Node *new_node_ident(char *name) {
 
 // トークンを消費するとともに、その型が期待したものかを確認する
 int consume(int ty) {
-  if (((Token *)(tokens->data[pos]))->ty != ty)
+  if (get_token(tokens, pos)->ty != ty)
     return 0;
   pos++;
   return 1;
@@ -77,7 +82,7 @@ int consume(int ty) {
 
 // トークンを消費せず、その型が期待したものかを確認する
 int current(int ty) {
-  if (((Token *)(tokens->data[pos]))->ty != ty)
+  if (get_token(tokens, pos)->ty != ty)
     return 0;
   return 1;
 }
@@ -86,7 +91,7 @@ int current(int ty) {
 // トークンは消費しない
 int forward(int ty) {
   int next_pos = pos + 1;
-  if (((Token *)(tokens->data[next_pos]))->ty != ty)
+  if (get_token(tokens, next_pos)->ty != ty)
     return 0;
   return 1;
 }
@@ -109,12 +114,12 @@ Type *array(Type *t) {
     return t;
   }
 
-  int siz = ((Token *)tokens->data[pos++])->val;
+  int siz = get_token(tokens, pos++)->val;
   Type *tmp = malloc(sizeof(Type));
   tmp->ty = ARRAY;
   tmp->array_size = siz;
   if (!consume(']'))
-    error_at((((Token *)(tokens->data[pos]))->input),
+    error_at((get_token(tokens, pos)->input),
              "開きカッコに対する閉じカッコがありません");
 
   tmp->ptrof = array(t);
@@ -185,7 +190,7 @@ Node *code[100];
 //
 void program() {
   int i = 0;
-  while (((Token *)tokens->data[pos])->ty != TK_EOF) {
+  while (get_token(tokens, pos)->ty != TK_EOF) {
     code[i++] = decl();
   }
   code[i] = NULL;
@@ -198,8 +203,8 @@ Node *decl() {
   Type *ty = read_decl_type();
 
   // 識別子
-  if (((Token *)(tokens->data[pos]))->ty == TK_IDENT) {
-    char *label = ((Token *)tokens->data[pos])->name;
+  if (get_token(tokens, pos)->ty == TK_IDENT) {
+    char *label = get_token(tokens, pos)->name;
     if (forward('(')) {
       pos++;
       node = read_decl_func_tail(label);
@@ -209,7 +214,7 @@ Node *decl() {
       node = read_decl_var_tail(ty, label);
     }
   } else
-    error_at(((Token *)(tokens->data[pos]))->input, "識別子がありません");
+    error_at(get_token(tokens, pos)->input, "識別子がありません");
 
   return node;
 }
@@ -222,7 +227,7 @@ Type *read_decl_type() {
   } else if (consume(TK_CHAR)) {
     ty->ty = CHAR;
   } else {
-    error_at((((Token *)(tokens->data[pos]))->input),
+    error_at((get_token(tokens, pos)->input),
              "'int'/'char'キーワードがありません");
   }
   ty->ptrof = NULL;
@@ -242,8 +247,7 @@ Node *read_decl_func_tail(char *label) {
 
   // 仮引数
   if (!consume('('))
-    error_at((((Token *)(tokens->data[pos]))->input),
-             "仮引数の開きカッコがありません");
+    error_at((get_token(tokens, pos)->input), "仮引数の開きカッコがありません");
 
   if (!consume(')')) {
     vec_push(node->args, (void *)var_decl());
@@ -252,7 +256,7 @@ Node *read_decl_func_tail(char *label) {
       vec_push(node->args, (void *)var_decl());
 
     if (!consume(')'))
-      error_at((((Token *)(tokens->data[pos]))->input),
+      error_at((get_token(tokens, pos)->input),
                "仮引数の閉じカッコがありません");
   }
 
@@ -266,8 +270,7 @@ Node *read_decl_func_tail(char *label) {
         break;
     }
   } else {
-    error_at((((Token *)(tokens->data[pos]))->input),
-             "'{'ではないトークンです");
+    error_at((get_token(tokens, pos)->input), "'{'ではないトークンです");
   }
 
   return node;
@@ -281,8 +284,7 @@ Node *read_decl_var_tail(Type *ty, char *label) {
     ty = pointer(ty, 1);
   }
   if (!consume(';'))
-    error_at((((Token *)(tokens->data[pos]))->input),
-             "';'ではないトークンです");
+    error_at((get_token(tokens, pos)->input), "';'ではないトークンです");
   Node *node = init_node();
   node->name = label;
   node->ty = ND_DEF_VAR;
@@ -296,12 +298,10 @@ Node *stmt() {
   if (consume(TK_IF)) {
     node->ty = ND_IF;
     if (!consume('('))
-      error_at((((Token *)(tokens->data[pos]))->input),
-               "'('ではないトークンです");
+      error_at((get_token(tokens, pos)->input), "'('ではないトークンです");
     node->lhs = expr();
     if (!consume(')'))
-      error_at((((Token *)(tokens->data[pos]))->input),
-               "')'ではないトークンです");
+      error_at((get_token(tokens, pos)->input), "')'ではないトークンです");
     node->rhs = stmt();
 
     // if文がelseを持つ場合, nodeの型を変更する
@@ -320,12 +320,10 @@ Node *stmt() {
   if (consume(TK_WHIL)) {
     node->ty = ND_WHIL;
     if (!consume('('))
-      error_at((((Token *)(tokens->data[pos]))->input),
-               "'('ではないトークンです");
+      error_at((get_token(tokens, pos)->input), "'('ではないトークンです");
     node->lhs = expr();
     if (!consume(')'))
-      error_at((((Token *)(tokens->data[pos]))->input),
-               "')'ではないトークンです");
+      error_at((get_token(tokens, pos)->input), "')'ではないトークンです");
     node->rhs = stmt();
     return node;
   }
@@ -339,30 +337,26 @@ Node *stmt() {
     node->rhs = node_rhs;
 
     if (!consume('('))
-      error_at((((Token *)(tokens->data[pos]))->input),
-               "'('ではないトークンです");
+      error_at((get_token(tokens, pos)->input), "'('ではないトークンです");
 
     // expr? ; expr? ; expr?)
     if (!forward(';')) {
       node->lhs->lhs = expr();
     }
     if (!consume(';'))
-      error_at((((Token *)(tokens->data[pos]))->input),
-               "')'ではないトークンです");
+      error_at((get_token(tokens, pos)->input), "')'ではないトークンです");
 
     if (!forward(';')) {
       node->lhs->rhs = expr();
     }
     if (!consume(';'))
-      error_at((((Token *)(tokens->data[pos]))->input),
-               "')'ではないトークンです");
+      error_at((get_token(tokens, pos)->input), "')'ではないトークンです");
 
     if (!forward(')')) {
       node->rhs->lhs = expr();
     }
     if (!consume(')'))
-      error_at((((Token *)(tokens->data[pos]))->input),
-               "')'ではないトークンです");
+      error_at((get_token(tokens, pos)->input), "')'ではないトークンです");
 
     node->rhs->rhs = stmt();
 
@@ -374,7 +368,7 @@ Node *stmt() {
     node = var_decl();
 
     if (!consume(';'))
-      error_at((((Token *)(tokens->data[pos]))->input), "';'がありません");
+      error_at((get_token(tokens, pos)->input), "';'がありません");
     return node;
   }
 
@@ -401,8 +395,7 @@ Node *stmt() {
   }
 
   if (!consume(';'))
-    error_at((((Token *)(tokens->data[pos]))->input),
-             "';'ではないトークンです");
+    error_at((get_token(tokens, pos)->input), "';'ではないトークンです");
   return node;
 }
 
@@ -419,7 +412,7 @@ Node *var_decl() {
   // 識別子の部分
   node->ty = ND_IDENT;
 
-  char *var_name = ((Token *)tokens->data[pos++])->name;
+  char *var_name = get_token(tokens, pos++)->name;
   node->name = var_name;
 
   Type *var = pointer(ty, ptr_count);
@@ -558,8 +551,7 @@ Node *sizeof_op(Node *node) {
       node = new_node_num(4);
   } break;
   default:
-    error_at((((Token *)(tokens->data[pos]))->input),
-             "構文木に紐づく型がわかりません");
+    error_at((get_token(tokens, pos)->input), "構文木に紐づく型がわかりません");
   }
   return node;
 }
@@ -584,8 +576,7 @@ Node *unary() {
     if (consume('(')) {
       node = expr();
       if (!consume(')'))
-        error_at((((Token *)(tokens->data[pos]))->input),
-                 "閉じカッコがありません");
+        error_at((get_token(tokens, pos)->input), "閉じカッコがありません");
     } else {
       node = ident();
     }
@@ -615,18 +606,18 @@ Node *term() {
   if (consume('(')) {
     node = expr();
     if (!consume(')'))
-      error_at((((Token *)(tokens->data[pos]))->input),
+      error_at((get_token(tokens, pos)->input),
                "開きカッコに対する閉じカッコがありません");
     return node;
   }
 
   // 上記でない場合は、numかidentが来るハズ
-  if (((Token *)(tokens->data[pos]))->ty == TK_NUM) {
-    node = new_node_num(((Token *)tokens->data[pos++])->val);
+  if (get_token(tokens, pos)->ty == TK_NUM) {
+    node = new_node_num(get_token(tokens, pos++)->val);
     return node;
   }
 
-  if (((Token *)(tokens->data[pos]))->ty == TK_IDENT) {
+  if (get_token(tokens, pos)->ty == TK_IDENT) {
     node = ident();
 
     // 関数であるか判定
@@ -643,24 +634,23 @@ Node *term() {
         vec_push(node->args, (void *)expr());
 
       if (!consume(')'))
-        error_at((((Token *)(tokens->data[pos]))->input),
+        error_at((get_token(tokens, pos)->input),
                  "開きカッコに対する閉じカッコがありません");
     }
 
     // 配列の添字であるか判定
     if (consume('[')) {
       Node *index = init_node();
-      Token *token = tokens->data[pos++];
+      Token *token = get_token(tokens, pos++);
       if (token->ty == TK_NUM)
         index = new_node_num(token->val);
       else if (token->ty == TK_IDENT)
         index = new_node_ident(token->name);
       else
-        error_at((((Token *)(tokens->data[pos]))->input),
-                 "添字[数]がありません");
+        error_at((get_token(tokens, pos)->input), "添字[数]がありません");
 
       if (!consume(']'))
-        error_at((((Token *)(tokens->data[pos]))->input),
+        error_at((get_token(tokens, pos)->input),
                  "開きカッコに対する閉じカッコがありません");
 
       node = new_node(ND_DEREF, NULL, new_node('+', node, index));
@@ -669,25 +659,26 @@ Node *term() {
     return node;
   }
 
-  if (((Token *)(tokens->data[pos]))->ty == TK_LITER) {
+  if (get_token(tokens, pos)->ty == TK_LITER) {
     node->ty = ND_LITER;
-    node->liter = ((Token *)(tokens->data[pos++]))->liter;
+    node->liter = get_token(tokens, pos++)->liter;
     return node;
   }
 
-  error_at(((Token *)(tokens->data[pos]))->input,
+  error_at(get_token(tokens, pos)->input,
            "数値でも識別子でも文字列リテラルでもないトークンです");
 }
 
 Node *ident() {
-  if (!(((Token *)(tokens->data[pos]))->ty == TK_IDENT))
-    error_at(((Token *)(tokens->data[pos]))->input, "識別子がありません");
-  char *var_name = ((Token *)tokens->data[pos])->name;
+  if (!(get_token(tokens, pos)->ty == TK_IDENT))
+    error_at(get_token(tokens, pos)->input, "識別子がありません");
+
+  char *var_name = get_token(tokens, pos)->name;
+
   if (((map_get(var_map, var_name) == NULL) &&
        map_get(gl_var_map, var_name) == NULL) &&
       !forward('(')) {
-    error_at((((Token *)(tokens->data[pos]))->input),
-             "定義された変数ではありません");
+    error_at((get_token(tokens, pos)->input), "定義された変数ではありません");
   }
   pos++;
   Node *node = new_node_ident(var_name);
