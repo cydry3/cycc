@@ -185,8 +185,8 @@ try 3 "int main() { char x[3]; int y; x[0] = -1; x[1] = 2; y = 4; return x[0] + 
 try 3 "char x[3]; int y; int main() { x[0] = -1; x[1] = 2; y = 4; return x[0] + y;}"
 try -out abc 'int main() { char *x; x = "abc"; printfoo(x);}'
 try -out hello 'int main() { char *y; y = "hello"; printfoo(y);}'
-try 13 -file "bar.txt"
-try 4 -file "buzz.txt"
-try 92 -file "qux.txt"
+try 13 -file "test/bar.txt"
+try 4 -file "test/buzz.txt"
+try 92 -file "test/qux.txt"
 
 echo OK
