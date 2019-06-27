@@ -482,31 +482,6 @@ int array_size_of(Type *t) {
   return siz * array_size_of(t->ptrof);
 }
 
-// 配列の為の関数
-// 構文木を辿り、sizeof演算子、&アドレス演算子のオペランド以外の
-// 配列型をポインタ型に変換する
-void array_as_pointer(Node *node) {
-  if (node == NULL)
-    return;
-
-  if (node->ty == ND_ADDRESS)
-    return;
-
-  array_as_pointer(node->lhs);
-  // 配列型の場合は、ポインタ型にすべて置き換えてしまう
-  if (node->ty == ND_IDENT) {
-    char *var_name = node->name;
-    Type *t = (Type *)map_get(var_map, var_name);
-    if (t != NULL) {
-      if (t->ty == ARRAY) {
-        t->ty = PTR;
-        map_put(var_map, var_name, (void *)t);
-      }
-    }
-  }
-  array_as_pointer(node->rhs);
-}
-
 // パースされた複数のトップレベルの定義を100個まで格納
 Node *code[100];
 
