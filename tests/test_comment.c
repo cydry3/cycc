@@ -1,9 +1,3 @@
-int abs(int x) {
-  if (x < 0)
-    return -x;
-  return x;
-}
-
 int main() {
   int x;
   int y;
@@ -18,6 +12,7 @@ int main() {
     y = 1;
     x = y + 3;
   */
+  x = x - 4;
 
-  return abs(x);
+  return (x);
 }

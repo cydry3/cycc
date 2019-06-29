@@ -1,1 +1,0 @@
-int main() { int ***x; int **y; int *z; int a; x = &y; y = &z;  z = &a; ***x = 11; **y = 13; return a;}

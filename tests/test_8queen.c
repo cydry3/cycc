@@ -1,9 +1,7 @@
 int queen[8];
 int count;
 
-int abs(int x) {
-  return absfoo(x);
-}
+int abs(int x) { return absfoo(x); }
 
 int check_line(int *target) {
   int i;
@@ -15,7 +13,7 @@ int check_line(int *target) {
     for (j = i + 1; j < 8; j = j + 1) {
       a = target[i];
       b = target[j];
-      if (a == b) 
+      if (a == b)
         return 0;
     }
   }
@@ -36,7 +34,7 @@ int check_diagonal(int *target) {
       b = target[j];
       m = a - b;
       n = j - i;
-      if (abs(m) == abs(n)) 
+      if (abs(m) == abs(n))
         return 0;
     }
   }
@@ -49,7 +47,7 @@ int check(int *target) {
 
   if (check_diagonal(target) == 0)
     return 0;
-  
+
   return 1;
 }
 
@@ -77,7 +75,7 @@ int set_queen(int n) {
 
   for (i = 0; i < 8; i = i + 1) {
     *(queen + n) = i;
-    set_queen((n+1));
+    set_queen((n + 1));
   }
   return 0;
 }
