@@ -38,16 +38,8 @@ Node *ident();
 
 Node *init_node() {
   Node *node;
-  node = malloc(sizeof(Node));
-  node->ty = 0;
-  node->lhs = NULL;
-  node->rhs = NULL;
-  node->val = 0;
-  node->name = NULL;
-  node->block = NULL;
-  node->args = NULL;
-  node->deref = 0;
-  node->liter = 0;
+  node = calloc(1, sizeof(Node));
+  return node;
 }
 
 Node *new_node(int ty, Node *lhs, Node *rhs) {
