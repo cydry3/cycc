@@ -15,3 +15,4 @@ clean:
 	rm -f cycc *.o *~ tmp*
 
 
+.PHONY: test clean

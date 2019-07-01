@@ -35,19 +35,19 @@ try() {
 }
 
 # Test C files
-try 0 -file "tests/test_ident.c"
-try 0 -file "tests/test_ptr.c"
-try 0 -file "tests/test_array.c"
-try 0 -file "tests/test_expr.c"
-try 0 -file "tests/test_stmt.c"
-try 0 -file "tests/test_ext_def.c"
-try 0 -file "tests/test_comment.c"
+try 0 -file "test/test_ident.c"
+try 0 -file "test/test_ptr.c"
+try 0 -file "test/test_array.c"
+try 0 -file "test/test_expr.c"
+try 0 -file "test/test_stmt.c"
+try 0 -file "test/test_ext_def.c"
+try 0 -file "test/test_comment.c"
 
 #Test using stdout
 try -out abcb 'int main() { char *x; x = "abcb"; printfoo(x);}'
 try -out Hello 'int main() { char *y; y = "Hello"; printfoo(y);}'
 
 #Test using Eight queens puzzle
-try 92 -file "tests/test_8queen.c"
+try 92 -file "test/test_8queen.c"
 
 echo OK
