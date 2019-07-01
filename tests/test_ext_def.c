@@ -7,6 +7,15 @@ int expect(int actual, int expected, char *msg) {
   exitfoo(1);
 }
 
+char expect_c(char actual, char expected, char *msg) {
+  if (actual == expected) {
+    printbuzz("Test '%s', OK\n", msg);
+    return 0;
+  }
+  printbuzz("Test failed at '%s'\n", msg);
+  exitfoo(1);
+}
+
 // External definitions
 // Function definitions
 int func_def_ext1() { foo(); }
@@ -219,17 +228,17 @@ int main() {
   want = 1;
   expect(got, want, msg);
 
-  /* TODO
+  char c_got;
+  char c_want;
   msg = "Object def.10";
-  got = Object_def10();
-  want = 1;
-  expect(got, want, msg);
+  c_got = Object_def10();
+  c_want = 1;
+  expect_c(c_got, c_want, msg);
 
   msg = "Object def.11";
-  got = Object_def11();
-  want = 3;
-  expect(got, want, msg);
-  */
+  c_got = Object_def11();
+  c_want = 3;
+  expect_c(c_got, c_want, msg);
 
   return 0;
 }

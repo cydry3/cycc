@@ -7,6 +7,15 @@ int expect(int actual, int expected, char *msg) {
   exitfoo(1);
 }
 
+char expect_c(char actual, char expected, char *msg) {
+  if (actual == expected) {
+    printbuzz("Test '%s', OK\n", msg);
+    return 0;
+  }
+  printbuzz("Test failed at '%s'\n", msg);
+  exitfoo(1);
+}
+
 // Declarators
 // Array declarators
 int Array_decl1() {
@@ -83,19 +92,19 @@ int Array_decl11() {
   }
   return a[0] + a[1] + a[2] + a[3] + a[4] + a[5] + a[6] + a[7] + a[8] + a[9];
 }
-int Array_decl12() {
+char Array_decl12() {
   char c_ary[10];
   c_ary[0] = 1;
   c_ary[1] = 2;
   return c_ary[0] + c_ary[1];
 }
-int Array_decl13() {
+char Array_decl13() {
   char c_ary[3];
-  int y;
+  char c_y;
   c_ary[0] = -1;
   c_ary[1] = 2;
-  y = 4;
-  return c_ary[0] + y;
+  c_y = 4;
+  return c_ary[0] + c_y;
 }
 
 int main() {
@@ -160,18 +169,17 @@ int main() {
   want = 45;
   expect(got, want, msg);
 
-  /* TODO
+  char c_got;
+  char c_want;
   msg = "Array decl.12";
-  got = Array_decl12();
-  printbar("debug:%d\n", got);
-  want = 1;
-  expect(got, want, msg);
+  c_got = Array_decl12();
+  c_want = 3;
+  expect_c(c_got, c_want, msg);
 
   msg = "Array decl.13";
-  got = Array_decl13();
-  want = 3;
-  expect(got, want, msg);
-  */
+  c_got = Array_decl13();
+  c_want = 3;
+  expect_c(c_got, c_want, msg);
 
   return 0;
 }

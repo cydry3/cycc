@@ -43,12 +43,6 @@ try 0 -file "tests/test_stmt.c"
 try 0 -file "tests/test_ext_def.c"
 try 0 -file "tests/test_comment.c"
 
-#Todo
-try 1 "int main() { char x[10]; x[0] = -1; x[1] = 2; return x[0] + x[1]; }"
-try 3 "int main() { char x[3]; int y; x[0] = -1; x[1] = 2; y = 4; return x[0] + y; }"
-try 1 "char x[10]; int main() { x[0] = -1; x[1] = 2; return x[0] + x[1]; }"
-try 3 "char x[3]; int main() { int y; x[0] = -1; x[1] = 2; y = 4; return x[0] + y; }"
-
 #Test using stdout
 try -out abcb 'int main() { char *x; x = "abcb"; printfoo(x);}'
 try -out Hello 'int main() { char *y; y = "Hello"; printfoo(y);}'
