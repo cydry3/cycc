@@ -63,6 +63,25 @@ void emit_epilogue() {
   printf("  ret\n");
 }
 
+// 右辺値を発行する関数
+void emit_rvalue(Node *node) {
+  printf("  pop rax\n");
+
+  // WORDのサイズ
+  int size = 0;
+  find_var_size(node, &size);
+  char *w_siz = word_size(size);
+  char *r_siz = rax_size(size);
+
+  // アドレスから値をロード
+  if (size == 1)
+    printf("  movsx rax, %s[rax]\n", w_siz);
+  else
+    printf("  mov %s, %s[rax]\n", r_siz, w_siz);
+
+  printf("  push rax\n");
+}
+
 // if文のジャンプ先のラベルをユニークにする為のカウンタ
 int jmp_label_count;
 
@@ -232,9 +251,7 @@ void gen(Node *node) {
 
   if (node->ty == ND_DEREF) {
     gen_lval(node);
-    printf("  pop rax\n");
-    printf("  mov rax, [rax]\n");
-    printf("  push rax\n");
+    emit_rvalue(node);
     return;
   }
 
@@ -250,18 +267,7 @@ void gen(Node *node) {
 
   if (node->ty == ND_IDENT) {
     gen_lval(node);
-    printf("  pop rax\n");
-
-    int size = 0;
-    find_var_size(node, &size);
-    char *w_siz = word_size(size);
-    char *r_siz = rax_size(size);
-    if (size == 1)
-      printf("  movsx rax, %s[rax]\n", w_siz);
-    else
-      printf("  mov %s, %s[rax]\n", r_siz, w_siz);
-
-    printf("  push rax\n");
+    emit_rvalue(node);
     return;
   }
 
