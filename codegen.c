@@ -82,6 +82,30 @@ void emit_rvalue(Node *node) {
   printf("  push rax\n");
 }
 
+// ポインタの加算・減算の為のシフト量を計算
+void emit_ptr_additive(Node *node) {
+  int siz = 0;
+  if (node->name != NULL) {
+    Type *t = (Type *)map_get(var_map, node->name);
+    if (t == NULL)
+      t = (Type *)map_get(gl_var_map, node->name);
+
+    if ((t != NULL) && (t->ty == PTR)) {
+      if (((Type *)(t->ptrof))->ty == ARRAY) {
+        t = t->ptrof;
+      }
+
+      if (((Type *)(t->ptrof))->ty == PTR) {
+        siz = 3; // 3bits 左シフト量(8bytes)
+      }
+      if (((Type *)(t->ptrof))->ty == INT) {
+        siz = 2; // 2bits 左シフト量(4bytes)
+      }
+      printf("  shl rdi, %d\n", siz);
+    }
+  }
+}
+
 // if文のジャンプ先のラベルをユニークにする為のカウンタ
 int jmp_label_count;
 
@@ -400,41 +424,16 @@ void gen(Node *node) {
   printf("  pop rdi\n");
   printf("  pop rax\n");
 
-  // ポインタの加算・減算の為のシフト量を計算
-  int is_pointer = 0;
-  int siz = 0;
-  if (node->lhs->name != NULL) {
-    Type *t = (Type *)map_get(var_map, node->lhs->name);
-    if (t == NULL)
-      t = (Type *)map_get(gl_var_map, node->lhs->name);
-
-    if ((t != NULL) && (t->ty == PTR)) {
-      is_pointer = 1;
-      if (((Type *)(t->ptrof))->ty == ARRAY) {
-        t = t->ptrof;
-      }
-
-      if (((Type *)(t->ptrof))->ty == PTR) {
-        siz = 3; // 3bits 左シフト量(8bytes)
-      }
-      if (((Type *)(t->ptrof))->ty == INT) {
-        siz = 2; // 2bits 左シフト量(4bytes)
-      }
-    }
-  }
-
   switch (node->ty) {
   case '+':
-    // ポインタの加算の為
-    if (is_pointer)
-      printf("  shl rdi, %d\n", siz);
+    // 左辺がポインタの加算の場合、右辺をサイズ分増やす
+    emit_ptr_additive(node->lhs);
 
     printf("  add rax, rdi\n");
     break;
   case '-':
-    // ポインタの減算の為
-    if (is_pointer)
-      printf("  shl rdi, %d\n", siz);
+    // 左辺がポインタの加算の場合、右辺をサイズ分増やす
+    emit_ptr_additive(node->lhs);
 
     printf("  sub rax, rdi\n");
     break;
