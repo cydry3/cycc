@@ -226,17 +226,10 @@ void gen(Node *node) {
   }
 
   if (node->ty == ND_DEREF) {
-    gen(node->rhs);
+    gen_lval(node);
     printf("  pop rax\n");
     printf("  mov rax, [rax]\n");
     printf("  push rax\n");
-
-    // ２つ以上のデリファレンス'*'
-    for (int n = node->deref - 1; n > 0; n--) {
-      printf("  pop rax\n");
-      printf("  mov rax, [rax]\n");
-      printf("  push rax\n");
-    }
     return;
   }
 
