@@ -272,53 +272,44 @@ void gen(Node *node) {
   }
 
   if (node->ty == ND_FUNC) {
-    char *func_name = node->name;
-    if (node->args->len != 0) {
-      int before_label = jmp_label_count++;
-      int after_label = jmp_label_count++;
-
-      // 引数を評価
-      int argc = node->args->len;
-      char *regs[6] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
-      for (int i = 0; (i < argc) && (i < 6); i++) {
-        gen((Node *)node->args->data[i]);
-        printf("  pop rax\n");
-        printf("  mov %s, rax\n", regs[i]);
-      }
-
-      // スタックポインタが16の倍数であるかを判定し、揃える
-      // 関数呼び出し前の処理
-      // 揃っていた場合は0を、そうでない場合は1をスタックに積む
-      printf("  mov rbx, 0\n");
-      printf("  mov rax, [rsp]\n");
-      printf("  mov r10, %d\n", (16 - 1)); // x % 2**n == x & 2**n-1
-      printf("  and rax, r10\n");          // 剰余をAND演算で行う
-      printf("  cmp rax, 0\n");
-      printf("  jne .Lend%03d\n", before_label);
-      printf("  add rsp, rax\n");
-      printf("  mov rbx, rax\n");
-      printf(".Lend%03d:\n", before_label);
-
-      // 関数呼び出し
-      printf("  mov al, 0\n");
-      printf("  call %s\n", func_name);
-      printf("  mov rdi, rax\n");
-
-      // スタックポインタが16の倍数であるかを判定し、揃える
-      // 関数呼び出し後の処理
-      // 揃っていた場合は0が、そうでない場合は1がスタックに積まれているハズ
-      printf("  mov rax, rbx\n");
-      printf("  cmp rax, 0\n");
-      printf("  jne .Lend%03d\n", after_label);
-      printf("  sub rsp, rax\n");
-      printf(".Lend%03d:\n", after_label);
-
-      printf("  mov rax, rdi\n");
-      printf("  push rax\n");
-    } else {
-      printf("  call %s\n", func_name);
-      printf("  push rax\n");
+    // 引数を評価し、レジスタに格納する　
+    int argc = node->args->len;
+    char *regs[6] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
+    for (int i = 0; (i < argc) && (i < 6); i++) {
+      gen((Node *)node->args->data[i]);
+      printf("  pop rax\n");
+      printf("  mov %s, rax\n", regs[i]);
     }
+
+    // スタックポインタが16の倍数であるかを判定し、揃える
+    // 関数呼び出し前の処理
+    int before_label = jmp_label_count++;
+    printf("  mov rbx, 0\n");
+    printf("  mov rax, [rsp]\n");
+    printf("  mov r10, %d\n", (16 - 1)); // x % 2**n == x & 2**n-1
+    printf("  and rax, r10\n");          // 剰余をAND演算で行う
+    printf("  cmp rax, 0\n");
+    printf("  jne .Lend%03d\n", before_label);
+    printf("  add rsp, rax\n");
+    printf("  mov rbx, rax\n");
+    printf(".Lend%03d:\n", before_label);
+
+    // 関数呼び出し
+    printf("  mov al, 0\n");
+    printf("  call %s\n", node->name);
+    printf("  mov rdi, rax\n");
+
+    // スタックポインタが16の倍数であるかを判定し、揃える
+    // 関数呼び出し後の処理
+    int after_label = jmp_label_count++;
+    printf("  mov rax, rbx\n");
+    printf("  cmp rax, 0\n");
+    printf("  jne .Lend%03d\n", after_label);
+    printf("  sub rsp, rax\n");
+    printf(".Lend%03d:\n", after_label);
+
+    printf("  mov rax, rdi\n");
+    printf("  push rax\n");
     return;
   }
 
@@ -326,16 +317,10 @@ void gen(Node *node) {
   if (node->ty == ND_DEF_VAR) {
     char *label = node->name;
     printf("%s:\n", label);
-    Type *t = map_get(gl_var_map, label);
-    int size = base_type_size(t);
-    if (t != NULL) {
-      t = t->ptrof;
-      if (t != NULL)
-        if (t->ty == ARRAY) {
-          int base_size = base_type_size_of_array(t);
-          size += (base_size * t->array_size);
-        }
-    }
+
+    int size;
+    find_var_size(node, &size);
+
     printf("  .zero %d\n", size);
     return;
   }
