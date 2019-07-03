@@ -56,6 +56,13 @@ int base_type_size_of_array(Type *t) {
   return base_type_size(t);
 }
 
+// エピローグを発行する関数
+void emit_epilogue() {
+  printf("  mov rsp, rbp\n");
+  printf("  pop rbp\n");
+  printf("  ret\n");
+}
+
 // if文のジャンプ先のラベルをユニークにする為のカウンタ
 int jmp_label_count;
 
@@ -160,9 +167,7 @@ void gen(Node *node) {
   if (node->ty == ND_RETURN) {
     gen(node->lhs);
     printf("  pop rax\n");
-    printf("  mov rsp, rbp\n");
-    printf("  pop rbp\n");
-    printf("  ret\n");
+    emit_epilogue();
     return;
   }
 
@@ -378,9 +383,7 @@ void gen(Node *node) {
     }
 
     // エピローグ
-    printf("  mov rsp, rbp\n");
-    printf("  pop rbp\n");
-    printf("  ret\n");
+    emit_epilogue();
     return;
   }
 
