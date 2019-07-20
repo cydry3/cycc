@@ -257,19 +257,21 @@ void gen(Node *node) {
   }
 
   if (node->ty == ND_FOR) {
-    int begin_label = jmp_label_count++;
-    int end_label = jmp_label_count++;
+    int cond_label = jmp_label_count++;
+    int body_label = jmp_label_count++;
 
-    gen(node->lhs->lhs);
-    printf(".Lbegin%03d:\n", begin_label);
-    gen(node->lhs->rhs);
+    gen(node->lhs->lhs); // 初期化
+    printf("  jmp .Lcond%d\n", cond_label);
+
+    printf(".Lbody%d:\n", body_label);
+    gen(node->rhs->rhs); // 本体
+    gen(node->rhs->lhs); // 末尾処理
+
+    printf(".Lcond%d:\n", cond_label);
+    gen(node->lhs->rhs); // 継続条件
     printf("  pop rax\n");
     printf("  cmp rax, 0\n");
-    printf("  je .Lend%03d\n", end_label);
-    gen(node->rhs->rhs);
-    gen(node->rhs->lhs);
-    printf("  jmp .Lbegin%03d\n", begin_label);
-    printf(".Lend%03d:\n", end_label);
+    printf("  jne .Lbody%d\n", body_label);
     return;
   }
 
