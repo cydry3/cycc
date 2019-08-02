@@ -259,13 +259,9 @@ void tokenize(char *user_input) {
     }
 
     // sizeof演算子
-    if (strncmp(p, "sizeof", 6) == 0 && !is_alnum(p[6])) {
-      Token *token = new_token();
-      token->ty = TK_SIZEOF;
-      token->input = p;
-      vec_push(tokens, token);
-      i++;
-      p += 6;
+    if (is_word(p, "sizeof") && !is_alnum(p[6])) {
+      make_token(TK_SIZEOF, NULL, "", p);
+      p += strlen("sizeof");
       continue;
     }
 
