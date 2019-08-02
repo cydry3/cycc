@@ -35,15 +35,15 @@ try() {
 }
 
 # Test C files
-#try 0 -file "test/test_ident.c"
-#try 0 -file "test/test_ptr.c"
-#try 0 -file "test/test_array.c"
-#try 0 -file "test/test_expr.c"
-#try 0 -file "test/test_stmt.c"
-#try 0 -file "test/test_ext_def.c"
-#try 0 -file "test/test_comment.c"
+try 0 -file "test/test_ident.c"
+try 0 -file "test/test_ptr.c"
+try 0 -file "test/test_array.c"
+try 0 -file "test/test_expr.c"
+try 0 -file "test/test_stmt.c"
+try 0 -file "test/test_ext_def.c"
+try 0 -file "test/test_comment.c"
 
-#Test using stdout
+Test using stdout
 try 0 "int main(){ 0; }"
 try 42 "int main(){ 42;}"
 try 21 "int main(){ 5+20-4;}"

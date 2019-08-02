@@ -12,6 +12,21 @@ Token *new_token() {
   return token;
 }
 
+void *make_token(int ty, int val, char *name, char *input) {
+  Token *token = malloc(sizeof(Token));
+  token->ty = ty;
+  token->val = val;
+  token->name = name;
+  token->input = input;
+  vec_push(tokens, token);
+  return;
+}
+
+static int is_word(const char *p, const char *name) {
+  int len = strlen(name);
+  return (strncmp(p, name, len) == 0);
+}
+
 // トークンを構成する文字か判定
 int is_alnum(char c) {
   return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z') ||
@@ -104,10 +119,7 @@ void tokenize(char *user_input) {
 
     // ステートメント
     if (*p == ';') {
-      Token *token = new_token();
-      token->ty = *p;
-      token->input = p;
-      vec_push(tokens, token);
+      make_token(*p, NULL, "", p);
       i++;
       p++;
       continue;
@@ -332,4 +344,3 @@ void tokenize(char *user_input) {
   token->input = p;
   vec_push(tokens, token);
 }
-
