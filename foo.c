@@ -1,6 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+int print_ok() { printf("OK"); }
+int print_i(int x) { printf("%d", x); }
+int print_add_i(int x, int y) { printf("%d", (x + y)); }
+int print_sum_i(int a, int b, int c, int d, int e, int f) {
+  printf("%d", (a + b + c + d + e + f));
+}
+
 int foo() { return 1; }
 int bar(int x) { return x; }
 int buzz(int x, int y) { return (x + y); }
